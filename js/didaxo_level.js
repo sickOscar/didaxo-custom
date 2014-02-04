@@ -24,6 +24,8 @@
 				base.options = $.extend( {}, $.didaxo.Player.defaultOptions, options );
 
 				base.buildPlayer();
+
+				base.waitAnswers();
 			};
 
 			base.buildPlayer = function() {
@@ -45,14 +47,18 @@
 				froogaloop.api( 'seekTo', convertToSeconds( $.didaxo.steps[currentStep].timerStart ) );
 				froogaloop.api( 'pause' );
 
-				froogaloop.addEvent( 'playProgress', function( data ) {
-					if( parseInt(data.seconds, 10) == convertToSeconds( $.didaxo.steps[currentStep].timerEnd ) ) {
-						froogaloop.api( 'pause' );
+				// add event
+				froogaloop.addEvent( 'playProgress', base.stepListener );
+			};
 
-						base.buildTest( $.didaxo.steps[currentStep] );
-
-					}
-				});
+			base.stepListener = function( data ) {
+				if( parseInt(data.seconds, 10) == convertToSeconds( $.didaxo.steps[currentStep].timerEnd ) ) {
+					// remove Event
+					froogaloop.removeEvent( 'playProgress' );
+					// froogaloop actions
+					froogaloop.api( 'pause' );
+					base.buildTest( $.didaxo.steps[currentStep] );
+				}
 			};
 
 			base.play = function( e ) {
@@ -65,19 +71,64 @@
 				froogaloop.api( 'pause' );
 			};
 
+			base.waitAnswers = function( e ) {
+
+				$('body').on('submit', 'form.question-form',  function( submit ) {
+					submit.preventDefault();
+
+					$form = $(submit.target);
+
+					if( $form.find('input:checked').length === 0 ) {
+						return false;
+					}
+
+					console.log( 'form submitted' );
+					// controllo se la risposta è corretta
+					$.ajax({
+						type : "POST",
+						// dataType : "json",
+						url : didaxo_ajax.ajaxurl,
+						data : {
+							action: "checkAnswer",
+							tu_question_id: $form.data('question-id'),
+							tu_answer: $form.find('input:checked').val(),
+							nonce: $form.data('nonce')
+						},
+						success: function(response) {
+							console.log( response );
+						},
+						error: function(error) {
+							alert(error);
+						}
+					});
+
+					return false;
+				});
+
+			};
+
+			/**
+			 * Costruzione del test
+			 * @param  {[type]} step
+			 * @return {[type]}
+			 */
 			base.buildTest = function( step ) {
 				base.$el.slideUp();
-
+				// reperimento dati
 				$.ajax({
-					type : "post",
-					dataType : "json",
-					url : ajaxurl,
+					type : "POST",
+					// dataType : "json",
+					url : didaxo_ajax.ajaxurl,
 					data : {
-						action: "retrieve_test",
+						action: "retrieveTest",
+						level_id: step.levelId,
 						nonce: step.nonce
 					},
 					success: function(response) {
-						console.log( response );
+						base.$el.after(response);
+					},
+					error: function(error) {
+						alert(error);
 					}
 				});
 
@@ -113,6 +164,11 @@
 		}
 	});
 
+	/**
+	 * Converte in secondi una stringa di minuti
+	 * @param  {[type]} input
+	 * @return {[type]}
+	 */
 	function convertToSeconds( input ) {
 		var parts = input.split(':'),
 			minutes = +parts[0],

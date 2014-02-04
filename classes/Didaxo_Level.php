@@ -2,6 +2,8 @@
 
 namespace TU;
 
+!defined( 'ABSPATH' ) and exit;
+
 /**
  * 
  */
@@ -31,8 +33,13 @@ class DidaxoLevel {
 		// caricamento script necessari
 		wp_enqueue_script( 'froogaloop' );
 		wp_enqueue_script( 'didaxo-level' );
+		wp_localize_script( 'didaxo-level', 'didaxo_ajax', array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' )
+		));
 
 		add_action( 'wp_head', array( &$this, 'buildSteps' ) );
+
+		
 
 		// ottengo il livello tu
 		$this->_master = new Level( tu()->level->ID );
@@ -45,6 +52,9 @@ class DidaxoLevel {
 		
 		// costruzione player ( tramite shortcode )
 		add_shortcode( 'didaxo_player', array( &$this, 'buildPlayerShortcode' ) );
+
+		
+		//error_log( 'add_action');
 		
 		// error_log( var_export( tu()->level->test , true ) );
 	}
@@ -91,8 +101,8 @@ class DidaxoLevel {
 		foreach( $children as $child ) 
 		{
 
-			$child_level = new Level( $child->ID );
-			$test = new Test( $child_level->get_test() );
+			$child_level = Levels::factory( $child->ID );
+			$test = $child_level->get_test();
 
 			/**
 			 * TODO : aggiungere alla coda solo se il test non è stato passato
@@ -101,7 +111,7 @@ class DidaxoLevel {
 			$timer_start = get_post_custom_values( 'timer_start', $child->ID );
 			$timer_end = get_post_custom_values( 'timer_end', $child->ID );
 
-			$wp_nonce = wp_create_nonce( 'didaxo_retrieve_level_' . $child->ID );
+			$wp_nonce = wp_create_nonce( 'didaxo_retrieve_level' );
 
 			$steps[] = array( 
 				'level_id' => $child->ID,
@@ -110,8 +120,7 @@ class DidaxoLevel {
 				'timer_end' => $timer_end[0],
 			);
 		}
-		//error_log( var_export( $steps, true ));
-		$wp_nonce = wp_create_nonce( 'didaxo_retrieve_test_' . $this->_master->ID );
+		$wp_nonce = wp_create_nonce( 'didaxo_retrieve_level' );
 
 		// trasformare l'array in js
 		?>
@@ -128,25 +137,104 @@ class DidaxoLevel {
 		</script>
 		<?php
 
-		add_action( 'wp_ajax_retrieve_test', array( &$this, 'retrieveTest') );
-
 	}
 
 	/**
 	 * Ajax test retrieve
 	 * @return [type] [description]
 	 */
-	public function retrieveTest()
+	public static function _ajax_retrieveTest()
 	{
+		// if ( !wp_verify_nonce( $_REQUEST['nonce'], "didaxo_retrieve_level") ) {
+  //     		exit("Cosa stai cercando di fare?");
+  //  		}
 
-		$post_id = $this->_master->ID;
-		error_log( var_export( $post_id, true ) );
-
-		if ( !wp_verify_nonce( $_REQUEST['nonce'], "didaxo_retrieve_test_")) {
-      		exit("Cosa stai cercando di fare?");
-   		}
-
+		$level = Levels::factory( $_REQUEST['level_id'] );
+		$questions = $level->get_test()->get_questions();
+		
+		// domanda random
+		$key = array_rand( $questions );
+		$quest = $questions[$key];
+		// render
+		$html = self::render_answers_form( $quest );
+		echo $html;
 	}
 
+	public static function render_answers_form( $question )
+	{
+		// creazione nonce
+		$wp_nonce = wp_create_nonce( 'didaxo_check_Answer' );
+		// reperire domande
+		$answers = $question->get_answers();
+
+		ob_start(); ?>
+		<form action="#" class="question-form" data-question-id="<?php echo $question->ID ?>" data-nonce="<?php echo $wp_nonce ?>">
+			<div class="question-title">
+				<span><?php echo $question->post_title; ?></span>
+			</div>
+		<?php 
+		$index = 0;
+		foreach( $answers as $answer): ?>
+			<div class="answer">
+				<label for="tu_answer[<?php echo $index; ?>]">
+					<input type="radio" name="tu_answer" value="<?php echo $answer ?>">
+					<?php echo $answer ?>
+				</label>
+			</div>
+		<?php 
+		$index++;
+		endforeach; ?>
+		<div class="submit">
+			<input type="submit" value="Conferma Risposta">
+		</div>
+		</form>
+		<?php 
+		return ob_get_clean();
+	}
+
+
+	public static function _ajax_checkAnswer()
+	{
+
+		// if ( !wp_verify_nonce( $_REQUEST['nonce'], "didaxo_retrieve_level") ) {
+  //     		exit("Cosa stai cercando di fare?");
+  //  		}
+		
+		// riferimento alla domanda
+		// 
+		$q = Questions::factory( $_REQUEST['tu_question_id'] );
+
+		$serialized = '';
+		foreach( $_REQUEST as $key=>$value ) 
+		{
+			$serialized .= $key . '=' . $value . '&';
+		}
+
+		// // start test
+		if( tu()->user->can_start_test($q->get_test()) ) {
+			
+			tu()->user->start_test( $q->get_test() );
+
+			$response = Questions::ajax_save_answer( $serialized );
+
+			if( $response['type'] === 'success' )
+			{
+				// controllo se il risultato è corretto
+				$positive_result = Questions::validate_answer( tu()->user , $q );
+				$result = array();
+				if( $positive_result ) 
+				{
+					// TEST SUPERATO
+					$result['result'] = 'ok';
+				}
+				else {
+					$result['result'] = 'ko';
+				}
+				echo json_encode($result);
+			}
+
+		}
+
+	}
 
 }
