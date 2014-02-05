@@ -163,6 +163,10 @@
 								// risposta errata
 							}
 
+							if( response.master === 'ok' ) {
+								alert( 'Completato il livello principale' );
+							}
+
 							$form.hide();
 							base.$el.after( $form );
 							$form.fadeIn();
@@ -223,12 +227,15 @@
 			 * @return {[type]} [description]
 			 */
 			base.nextStep = function() {
-				currentStep++;
-				base.resetPlayer();
-
-				base.showPlayer( function() {
+				// se non sono arrivato all'ultimo step prima della fine
+				// del video
+				if( ++currentStep < $.didaxo.steps.length ) {
+					base.resetPlayer();
 					// Anche aggiunta listener
 					froogaloop.addEvent( 'playProgress', base.stepListener );
+				}
+
+				base.showPlayer( function() {
 					base.play();
 				});
 

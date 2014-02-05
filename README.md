@@ -12,11 +12,19 @@ Il plugin come ora costruito funziona se sono presenti le seguenti condizioni
 
 #### Custom Fields
 
-Devono essere settati i seguenti custom fields ( nel formato [post_type] id )
+Devono essere settati i seguenti custom fields ( qui indicati nel formato [post_type] id [type] )
 
-* (Resource) video [string]
-* (Level) timer_start [string]
-* (Level) timer_end [string]
+* [Resource] video [string]
+* [Resource] video_hd_url [string]
+* [Resource] video_sd_url [string]
+* [Resource] video_mobile_url [string]
+* [Resource] video_hls_url [string]
+* [Level] timer_start [string]
+* [Level] timer_end [string]
+
+
+Gli attributi riguardanti gli url singoli non sono utilizzati nella verisone Vimeo ma lo saranno per forza nella versione MediaElements. Il tempo di inizio e fine di ogni singolo sottolivello deve essere settato nella forma mm:ss
+
 
 #### Gerarchia di livelli
 
@@ -35,6 +43,14 @@ Livello 2 {
 	...
 }
 
-#### Impostazione test
+come definita dallo scambio di documenti con Carlo. Per iniziare un livello, andare direttamente alla pagina corrispondete al livello padre. Lì comparirà il player.
 
-Ricrodarsi di impostare la percentuale corretta per fare in modo che l'utente possa passare il test rispondendo correttamente ad una sola domanda
+#### Impostazione TrainUp Test
+
+Ricrodarsi di impostare la percentuale corretta per fare in modo che l'utente possa passare il test rispondendo correttamente ad una sola domanda. E' importante inoltre settare la proprietà resit del test a -1, cosicchè si possa far provare all'utnete più volte un test.
+
+#### Librerie JS
+
+L'attuale implementazione è con librerie Vimeo. 
+
+* Impostare l'id di un video pubblico per il test provvisorio con Vimeo, fino alla risoluzione (se necessaria) di un bug che ne impedisce il playe via API una volta inserita la password

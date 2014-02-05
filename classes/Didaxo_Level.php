@@ -282,14 +282,12 @@ class DidaxoLevel {
 		{
 			// TEST SUPERATO
 			// controlla se tutti i test dei sottolivelli sono superati
-			if( self::master_level_complete( tu()->level ) )
-			{
-				// setta a completo anche il livello padre
-				die( 'COMPLETATO' );
-			}
+
+			$master = self::master_level_complete( tu()->level ) ? 'ok' : 'ko';
 
 			$result['result'] = 'ok';
 			$result['form'] = self::render_right_answer_form( $test );
+			$result['master'] = $master;
 			// terminato test e generazione del risultato
 		}
 		else 
