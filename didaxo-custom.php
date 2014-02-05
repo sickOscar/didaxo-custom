@@ -18,7 +18,9 @@ define( "DIDAXO_DIR", plugin_dir_path( __FILE__ ) );
 define( "DIDAXO_URL", plugins_url() . '/' . DIDAXO_NAME );
 
 @include( DIDAXO_DIR . 'classes/Utility.php');
+@include( DIDAXO_DIR . 'classes/Didaxo_Custom_Fields.php');
 @include( DIDAXO_DIR . 'classes/Didaxo_Level.php');
+
 
 // error_log( DIDAXO_DIR );
 
@@ -33,6 +35,8 @@ class DidaxoCustom
 	 */
 	public function __construct() 
 	{
+		Didaxo_Custom_Fields::init_customs();
+
 		add_action( 'init', array( $this, 'register_scripts') );
 		add_action( 'wp', array(  $this , 'factory') );
 	}
@@ -91,8 +95,6 @@ if ( is_plugin_active('train-up/index.php') ) {
 	add_action( 'wp_ajax_checkAnswer', array( 'TU\DidaxoLevel', '_ajax_checkAnswer') );
 	add_action( 'wp_ajax_nopriv_checkAnswer', array( 'TU\DidaxoLevel', '_ajax_checkAnswer') );
 
-
-	// add_filter( "tu_render_answers", array( 'TU\DidaxoLevel', 'render_answers' ), 1 );
 }
 
 
