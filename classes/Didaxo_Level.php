@@ -44,7 +44,7 @@ class DidaxoLevel {
 
 		// reperimento risorsa video
 		$resources = $this->_master->get_resources();
-		$video_array = get_post_custom_values( 'video', $resources[0]->ID);
+		$video_array = get_post_custom_values( 'wpcf-video', $resources[0]->ID);
 
 		self::$_video = $video_array[0];
 		
@@ -113,8 +113,8 @@ class DidaxoLevel {
 			// se ho già un risultato valido, non aggiungo alla lista lo step
 			if( !$passed ) 
 			{
-				$timer_start = get_post_custom_values( 'timer_start', $child->ID );
-				$timer_end = get_post_custom_values( 'timer_end', $child->ID );
+				$timer_start = get_post_custom_values( 'wpcf-timer_start', $child->ID );
+				$timer_end = get_post_custom_values( 'wpcf-timer_end', $child->ID );
 
 				$wp_nonce = wp_create_nonce( 'didaxo_retrieve_level' );
 
