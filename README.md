@@ -14,13 +14,13 @@ Il plugin come ora costruito funziona se sono presenti le seguenti condizioni
 
 Devono essere settati i seguenti custom fields ( qui indicati nel formato [post_type] id [type] )
 
-* [Resource] video [string]
-* [Resource] video_hd_url [string]
-* [Resource] video_sd_url [string]
-* [Resource] video_mobile_url [string]
-* [Resource] video_hls_url [string]
-* [Level] timer_start [string]
-* [Level] timer_end [string]
+* [Resource] wpcf-video [string]
+* [Resource] wpcf-video_hd_url [string]
+* [Resource] wpcf-video_sd_url [string]
+* [Resource] wpcf-video_mobile_url [string]
+* [Resource] wpcf-video_hls_url [string]
+* [Level] wpcf-timer_start [string]
+* [Level] wpcf-timer_end [string]
 
 
 Gli attributi riguardanti gli url singoli non sono utilizzati nella verisone Vimeo ma lo saranno per forza nella versione MediaElements. Il tempo di inizio e fine di ogni singolo sottolivello deve essere settato nella forma mm:ss
