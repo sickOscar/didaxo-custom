@@ -474,6 +474,8 @@ class DidaxoLevel
 		// ottengo il padre
 		$master = Levels::Factory( $level->post_parent );
 
+		// var_dump( $master );
+
 		// non dovrei mai fare questo controllo
 		if( !$master )
 		{
@@ -486,6 +488,7 @@ class DidaxoLevel
 			'post_parent' => $master->ID
 			));
 
+
 		$completed = true;
 		foreach( $children as $child )
 		{
@@ -494,17 +497,12 @@ class DidaxoLevel
 			// controllo se esiste un risultato positivo per 
 			// il test associato al sottolivello, se non c'è 
 			// almeno per uno, il test non è completato
-			$archives = tu()->user->get_archives( array( $sub_test->ID ) );
+			$archive = tu()->user->get_archive( $sub_test->ID );
 
-			// indicatore di passaggio del test che si sta analizzando
-			$completed = true;
-			foreach( $archives as $archive ) 
+			$passed = $archive['passed'] === '1' ? true : false;
+			if( !$passed )
 			{
-				if( $archive['test_id'] == $sub_test && !$archive['passed']) 
-				{
-					$completed = false;
-				}
-				
+				$completed = false;
 			}
 		}
 
