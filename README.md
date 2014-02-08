@@ -21,6 +21,7 @@ Devono essere settati i seguenti custom fields ( qui indicati nel formato [post_
 * [Resource] wpcf-video_hls_url [string]
 * [Level] wpcf-timer_start [string]
 * [Level] wpcf-timer_end [string]
+* [Question] wpcf-show_time [string]
 
 
 Gli attributi riguardanti gli url singoli non sono utilizzati nella verisone Vimeo ma lo saranno per forza nella versione MediaElements. Il tempo di inizio e fine di ogni singolo sottolivello deve essere settato nella forma mm:ss

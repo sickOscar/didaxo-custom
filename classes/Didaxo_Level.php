@@ -7,11 +7,32 @@ namespace TU;
 /**
  * 
  */
-class DidaxoLevel {
+class DidaxoLevel 
+{
 
 	public static $_video;
 
 	public $_master;
+
+
+	/**
+	 * Costanti di riferimento per i nomi dei capi custom
+	 */
+	const VIDEO_ID = 'wpcf-video';
+
+	const VIDEO_HD_URL = 'wpcf-video_hd_url';
+
+	const VIDEO_SD_URL = 'wpcf-video_sd_url';
+
+	const VIDEO_MOBILE_URL = 'wpcf-video_mobile_url';
+
+	const VIDEO_HLS_URL = 'wpcf-video_hls_url';
+
+	const TIMER_START = 'wpcf-timer_start';
+
+	const TIMER_END = 'wpcf-timer_end';
+
+	const SHOW_TIME = 'wpcf-show_time';
 
 	/**
 	 * [__construct description]
@@ -35,7 +56,7 @@ class DidaxoLevel {
 		wp_enqueue_script( 'didaxo-level' );
 		wp_localize_script( 'didaxo-level', 'didaxo_ajax', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' )
-		));
+			));
 
 		add_action( 'wp_head', array( &$this, 'buildSteps' ) );
 
@@ -44,12 +65,12 @@ class DidaxoLevel {
 
 		// reperimento risorsa video
 		$resources = $this->_master->get_resources();
-		$video_array = get_post_custom_values( 'video', $resources[0]->ID);
+		$video_array = get_post_custom_values( self::VIDEO_ID, $resources[0]->ID);
 
 		self::$_video = $video_array[0];
 		
 		// costruzione player ( tramite shortcode )
-		add_shortcode( 'didaxo_player', array( &$this, 'buildPlayerShortcode' ) );
+		add_shortcode( 'didaxo_vimeo_player', array( &$this, 'buildVimeoPlayerShortcode' ) );
 
 	}
 
@@ -57,23 +78,23 @@ class DidaxoLevel {
 	 * [buildPlayerShortcode description]
 	 * @return [type] [description]
 	 */
-	public function buildPlayerShortcode( $atts )
+	public function buildVimeoPlayerShortcode( $atts )
 	{
 		ob_start();
 		?>
 		<div id="didaxo-player-wrapper">
 			<iframe id="didaxo-player" src="http://player.vimeo.com/video/<?php echo self::$_video ?>?api=1&amp;player_id=didaxo-player&amp;badge=0&amp;portrait=0&amp;title=0&amp;byline=0" width="540" height="304" frameborder="0"></iframe>
-            <p>
-                <button class="play">Play</button>
-                <button class="pause">Pause</button>
-            </p>
+			<p>
+				<button class="play">Play</button>
+				<button class="pause">Pause</button>
+			</p>
 		</div>
 		<?php
 		return ob_get_clean();
 	}
 
 	/**
-	 * [buildSteps description]
+	 * Creazione degli step
 	 * @return [type] [description]
 	 */
 	public function buildSteps()
@@ -87,7 +108,7 @@ class DidaxoLevel {
 			'post_parent' => $this->_master->ID,
 			'orderby' => 'menu_order',
 			'order' => 'ASC',
-		);
+			);
 		$children = get_posts( $args );
 
 		// costruire un array con gli step definiti come cf
@@ -113,17 +134,38 @@ class DidaxoLevel {
 			// se ho già un risultato valido, non aggiungo alla lista lo step
 			if( !$passed ) 
 			{
-				$timer_start = get_post_custom_values( 'timer_start', $child->ID );
-				$timer_end = get_post_custom_values( 'timer_end', $child->ID );
+				$timer_start = get_post_meta( $child->ID, self::TIMER_START, true );
+				$timer_end = get_post_meta( $child->ID, self::TIMER_END, true);
 
 				$wp_nonce = wp_create_nonce( 'didaxo_retrieve_level' );
+
+				// question_time indica il momento in cui la domanda deve 
+				// venire fuori, all'interno dell'intervallo timer_Start timer_end
+				// Tempo assoluto rispetto l'intera lunghezza del video
+				$question_time;
+				// question_id è l'id della domanda da reperire
+				$question_id;
+
+				$questions = $test->get_questions();
+				if( !count($questions) ) 
+				{
+					die('Errore nel reperimento delle domande del test.');
+				}
+				// domanda random
+				$key = array_rand( $questions );
+				$quest = $questions[$key];
+				// reperire il time di una domanda
+				$question_time = get_post_meta( $quest->ID, 'tu_show_time', true );
+				$question_id = $quest->ID;
 
 				$steps[] = array( 
 					'level_id' => $child->ID,
 					'nonce' => $wp_nonce,
-					'timer_start' => $timer_start[0],
-					'timer_end' => $timer_end[0],
-				);
+					'timer_start' => $timer_start,
+					'timer_end' => $timer_end,
+					'question_time' => $question_time,
+					'question_id' => $question_id
+					);
 			}
 			
 		}
@@ -132,15 +174,15 @@ class DidaxoLevel {
 		// trasformare l'array in js
 		?>
 		<script>
-			var didaxoSteps = [];
-			<?php 
+		var didaxoSteps = [];
+		<?php 
 
-			foreach( $steps as $step ) 
-			{
-				echo "didaxoSteps.push({ nonce: '". $step['nonce'] ."', levelId: ". $step['level_id'] .", timerStart: '". $step['timer_start'] ."', timerEnd: '". $step['timer_end'] ."'});\n";
-			}
+		foreach( $steps as $step ) 
+		{
+			echo "didaxoSteps.push({ nonce: '". $step['nonce'] ."', levelId: ". $step['level_id'] .", timerStart: '". $step['timer_start'] ."', timerEnd: '". $step['timer_end'] ."', question_time: '". $step['question_time'] ."', question_id: '". $step['question_id'] ."'});\n";
+		}
 
-			 ?>
+		?>
 		</script>
 		<?php
 
@@ -153,10 +195,10 @@ class DidaxoLevel {
 	public static function _ajax_retrieveTest()
 	{
 		if ( !wp_verify_nonce( $_REQUEST['nonce'], "didaxo_retrieve_level") ) {
-    		die(json_encode(
-	    		array( 'result' => 'Cosa vuoi?')
-	    	));
- 		}
+			die(json_encode(
+				array( 'result' => 'Cosa vuoi?')
+				));
+		}
 
 
 		$level = Levels::factory( $_REQUEST['level_id'] );
@@ -193,21 +235,21 @@ class DidaxoLevel {
 			<div class="question-title">
 				<span><?php echo $question->post_title; ?></span>
 			</div>
-		<?php 
-		$index = 0;
-		foreach( $answers as $answer): ?>
+			<?php 
+			$index = 0;
+			foreach( $answers as $answer): ?>
 			<div class="answer">
 				<label for="tu_answer[<?php echo $index; ?>]">
 					<input type="radio" name="tu_answer" value="<?php echo $answer ?>">
 					<?php echo $answer ?>
 				</label>
 			</div>
-		<?php 
-		$index++;
-		endforeach; ?>
-		<div class="submit">
-			<input type="submit" value="Conferma Risposta">
-		</div>
+			<?php 
+			$index++;
+			endforeach; ?>
+			<div class="submit">
+				<input type="submit" value="Conferma Risposta">
+			</div>
 		</form>
 		<?php 
 		return ob_get_clean();
@@ -253,14 +295,14 @@ class DidaxoLevel {
 	{
 
 		if ( !wp_verify_nonce( $_REQUEST['nonce'], "didaxo_check_answer") ) {
-	    	die(json_encode(
-	    		array( 'result' => 'Cosa vuoi?')
-	    	));
-	 	}
+			die(json_encode(
+				array( 'result' => 'Cosa vuoi?')
+				));
+		}
 
-	 	// ottengo la risposta in formato serizlized
-	 	// (necessaria per salvare con ajax in trainup)
-	 	$serialized = '';
+		// ottengo la risposta in formato serizlized
+		// (necessaria per salvare con ajax in trainup)
+		$serialized = '';
 		foreach( $_REQUEST as $key=>$value ) 
 		{
 			$serialized .= $key . '=' . $value . '&';
@@ -320,7 +362,7 @@ class DidaxoLevel {
 			die(json_encode(array(
 				'result' => 'ko',
 				'form' => 'Non puoi accedere a questo test'
-			)));
+				)));
 		}
 
 		
@@ -330,7 +372,7 @@ class DidaxoLevel {
 			die(json_encode(array(
 				'result' => 'ko',
 				'form' => 'Non puoi ripetere questo test'
-			)));
+				)));
 		}
 
 		// reset caratteristiche dell'user rispetto al test	
@@ -369,7 +411,7 @@ class DidaxoLevel {
 		$children = get_posts(array(
 			'post_type' => 'tu_level',
 			'post_parent' => $master->id
-		));
+			));
 
 		$completed = true;
 		foreach( $children as $child )
