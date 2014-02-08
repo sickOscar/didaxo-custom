@@ -20,6 +20,7 @@ define( "DIDAXO_URL", plugins_url() . '/' . DIDAXO_NAME );
 @include( DIDAXO_DIR . 'classes/Utility.php');
 @include( DIDAXO_DIR . 'classes/Didaxo_Custom_Fields.php');
 @include( DIDAXO_DIR . 'classes/Didaxo_Level.php');
+@include( DIDAXO_DIR . 'classes/Didaxo_Question.php');
 
 
 // error_log( DIDAXO_DIR );
@@ -35,7 +36,10 @@ class DidaxoCustom
 	 */
 	public function __construct() 
 	{
+		// TODO: inizializzare i custom field senza plugin estrni
 		Didaxo_Custom_Fields::init_customs();
+		// custom type domande
+		new DidaxoQuestion;
 
 		add_action( 'init', array( $this, 'register_scripts') );
 		add_action( 'wp', array(  $this , 'factory') );
