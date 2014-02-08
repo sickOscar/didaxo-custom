@@ -203,7 +203,6 @@ jQuery(function($) {
 				$('body').on('submit', 'form[name="loose-form"]', function(ev) {
 
 					$('form[name="loose-form"]').fadeOut(function(ev) {
-						console.log('remove');
 						$(this).remove();
 					});
 

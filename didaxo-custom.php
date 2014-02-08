@@ -79,8 +79,11 @@ class DidaxoCustom
 	 */
 	public function register_scripts()
 	{
-		wp_register_script('didaxo-level', DIDAXO_URL . '/js/didaxo_level.js', array('jquery'), false, true );
+		// VIMEO API
+		wp_register_script('didaxo-level-vimeoapi', DIDAXO_URL . '/js/didaxo_level_vimeoAPI.js', array('jquery'), false, true );
 		wp_register_script('froogaloop', 'http://a.vimeocdn.com/js/froogaloop2.min.js');
+		// MEDIA ELEMENTS
+		wp_register_script('didaxo-level-vimeoapi', DIDAXO_URL . '/js/didaxo_level_mediaElements.js', array('jquery'), false, true );
 	}
 
 	

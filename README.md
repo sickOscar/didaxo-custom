@@ -48,8 +48,15 @@ come definita dallo scambio di documenti con Carlo. Per iniziare un livello, and
 
 #### Impostazione TrainUp Test
 
-Ricrodarsi di impostare la percentuale corretta per fare in modo che l'utente possa passare il test rispondendo correttamente ad una sola domanda. E' importante inoltre settare la proprietà resit del test a -1, cosicchè si possa far provare all'utnete più volte un test.
+Ricrodarsi di impostare la percentuale corretta per fare in modo che l'utente possa passare il test rispondendo correttamente ad una sola domanda. E' importante inoltre settare la proprietà resit del test a -1, cosicchè si possa far provare all'utnete più volte un test. C'è anche il controllo temporale sul test, quindi è importante settare anche il tempo massimo di completamento della domanda.
 
+#### Passaggio di un livello principale
+
+Per segnare a wordpress che uno specifico utente ha passato un livello, ho preferito evitare di fare test fasulli e ho optato per la creazione di un user_meta, settato a true nel caso un utente abbia passato quello specifico livello. Il meta si chiama 
+
+´´´html
+tu_user_passed_test_{test->ID}
+´´
 
 #### Shortcode
 

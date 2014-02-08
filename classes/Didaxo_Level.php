@@ -16,7 +16,7 @@ class DidaxoLevel
 
 
 	/**
-	 * Costanti di riferimento per i nomi dei capi custom
+	 * Costanti di riferimento per i nomi dei campi custom
 	 */
 	const VIDEO_ID = 'wpcf-video';
 
@@ -52,10 +52,7 @@ class DidaxoLevel
 
 		global $post;
 
-		// caricamento script necessari
-		wp_enqueue_script( 'froogaloop' );
-		wp_enqueue_script( 'didaxo-level' );
-		wp_localize_script( 'didaxo-level', 'didaxo_ajax', array(
+		wp_localize_script( 'didaxo-level-vimeoapi', 'didaxo_ajax', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' )
 			));
 
@@ -81,10 +78,37 @@ class DidaxoLevel
 	 */
 	public function buildVimeoPlayerShortcode( $atts )
 	{
+		// caricamento script necessari per API Vimeo
+		wp_enqueue_script( 'froogaloop' );
+		wp_enqueue_script( 'didaxo-level-vimeoapi' );
+
+
 		ob_start();
 		?>
 		<div id="didaxo-player-wrapper">
 			<iframe id="didaxo-player" src="http://player.vimeo.com/video/<?php echo self::$_video ?>?api=1&amp;player_id=didaxo-player&amp;badge=0&amp;portrait=0&amp;title=0&amp;byline=0" width="540" height="304" frameborder="0"></iframe>
+			<p>
+				<button class="play">Play</button>
+				<button class="pause">Pause</button>
+			</p>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * [buildPlayerShortcode description]
+	 * @return [type] [description]
+	 */
+	public function buildMediaElementsPlayerShortcode( $atts )
+	{
+		// caricamento script necessari per API Vimeo
+		wp_enqueue_script( 'froogaloop' );
+		wp_enqueue_script( 'didaxo-level-mediaelements' );
+		ob_start();
+		?>
+		<div id="didaxo-player-wrapper">
+			
 			<p>
 				<button class="play">Play</button>
 				<button class="pause">Pause</button>
@@ -207,7 +231,7 @@ class DidaxoLevel
 		$test = $question->get_test();
 
 		$acl = tu()->user->can_access_test( $test );
-		// error_log(var_export($acl, true));
+		
 		if( !$acl[0] ) 
 		{
 			die(json_encode(array(
@@ -364,7 +388,7 @@ class DidaxoLevel
 		{
 			// TEST SUPERATO
 			// controlla se tutti i test dei sottolivelli sono superati
-			$master = self::master_level_complete( tu()->level ) ? 'ok' : 'ko';
+			$master = self::master_level_complete( $test->get_level() ) ? 'ok' : 'ko';
 
 			$result['result'] = 'ok';
 			$result['form'] = self::render_right_answer_form( $test );
@@ -446,6 +470,7 @@ class DidaxoLevel
 	 */
 	public static function master_level_complete( $level ) 
 	{
+
 		// ottengo il padre
 		$master = Levels::Factory( $level->post_parent );
 
@@ -458,7 +483,7 @@ class DidaxoLevel
 
 		$children = get_posts(array(
 			'post_type' => 'tu_level',
-			'post_parent' => $master->id
+			'post_parent' => $master->ID
 			));
 
 		$completed = true;
@@ -483,11 +508,21 @@ class DidaxoLevel
 			}
 		}
 
+		if( $completed )
+		{
+			// setto un campo meta specifico per l'utente, per dire che ha 
+			// già passato questo test
+			update_user_meta( tu()->user->ID, 'tu_user_passed_test_' . $master->ID, true );
+		}
+
 		return $completed;
-
-
 	}
 
+	/**
+	 * Funzione utilyti per convertire le stringhe min:sec in secondi
+	 * @param  [type] $str_time [description]
+	 * @return [type]           [description]
+	 */
 	public static function convert_time_to_seconds( $str_time )
 	{
 		sscanf( $str_time, "%d:%d", $minutes, $seconds );
