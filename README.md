@@ -24,7 +24,7 @@ Devono essere settati i seguenti custom fields ( qui indicati nel formato [post_
 * [Question] wpcf-show_time [string]
 
 
-Gli attributi riguardanti gli url singoli non sono utilizzati nella verisone Vimeo ma lo saranno per forza nella versione MediaElements. Il tempo di inizio e fine di ogni singolo sottolivello deve essere settato nella forma mm:ss
+Gli attributi riguardanti gli url singoli non sono utilizzati nella verisone Vimeo ma lo saranno per forza nella versione MediaElements. Il tempo di inizio e fine di ogni singolo sottolivello deve essere settato nella forma mm:ss. Il custom field per il tempo di comparsa della domanda è gestito tramite codice, anch'esso deve essere specificato nella forma mm:ss (tempo assoluto del video).
 
 
 #### Gerarchia di livelli
@@ -49,6 +49,15 @@ come definita dallo scambio di documenti con Carlo. Per iniziare un livello, and
 #### Impostazione TrainUp Test
 
 Ricrodarsi di impostare la percentuale corretta per fare in modo che l'utente possa passare il test rispondendo correttamente ad una sola domanda. E' importante inoltre settare la proprietà resit del test a -1, cosicchè si possa far provare all'utnete più volte un test.
+
+
+#### Shortcode
+
+E' disponibile uno shortcode per fare comparire il player nel livello padre, a seconda del tipo di player che si vuole testare
+
+´´´html
+[didaxo_vimeo_player]
+´´´
 
 #### Librerie JS
 

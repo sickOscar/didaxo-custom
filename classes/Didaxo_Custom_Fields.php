@@ -13,7 +13,7 @@ class Didaxo_Custom_Fields
 
 	public static function init_customs()
 	{
-		error_log( 'CUSTOMs');
+		
 
 		
 	}

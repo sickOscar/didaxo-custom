@@ -34,6 +34,7 @@ class DidaxoLevel
 
 	const SHOW_TIME = 'wpcf-show_time';
 
+
 	/**
 	 * [__construct description]
 	 */
@@ -189,7 +190,8 @@ class DidaxoLevel
 	}
 
 	/**
-	 * Recupero della domanda attuale via ajax
+	 * - Recupero della domanda attuale via ajax
+	 * - Start del test (start del timer, max 90 sec)
 	 * @return [type] [description]
 	 */
 	public static function _ajax_retrieveTest()
@@ -197,24 +199,50 @@ class DidaxoLevel
 		if ( !wp_verify_nonce( $_REQUEST['nonce'], "didaxo_retrieve_level") ) {
 			die(json_encode(
 				array( 'result' => 'Cosa vuoi?')
-				));
+			));
 		}
 
+		// retrieve question
+		$question = Questions::factory( $_REQUEST['question_id'] );
+		$test = $question->get_test();
 
-		$level = Levels::factory( $_REQUEST['level_id'] );
-		$test = $level->get_test();
-
-		$questions = $level->get_test()->get_questions();
-		if( !count($questions) ) 
+		$acl = tu()->user->can_access_test( $test );
+		// error_log(var_export($acl, true));
+		if( !$acl[0] ) 
 		{
-			die('Errore: Nessuna domanda creata per il test');
-		} 
+			die(json_encode(array(
+				'result' => 'ko',
+				'form' => 'Non puoi accedere a questo test'
+				)));
+		}
+
 		
-		// domanda random
-		$key = array_rand( $questions );
-		$quest = $questions[$key];
+		$resit = tu()->user->can_resit_test( $test );
+		if( !$resit[0] )
+		{
+			die(json_encode(array(
+				'result' => 'ko',
+				'form' => 'Non puoi ripetere questo test'
+				)));
+		}
+
+		// reset caratteristiche dell'user rispetto al test	
+		tu()->user->resit_test( $test );
+
+		// inizia il test
+		tu()->user->start_test( $test );
+
+		// ATTENZIONE
+		// controllo se l'utente aveva precedentemente abbandonato il test
+		// ovvero, se c'è un meta tu_started_test_{$test->ID}, in quel caso lo resetto
+		// all'attuale time, così è come se ricominciasse il test
+		if( get_user_meta( tu()->user->ID, 'tu_started_test_'. $test->ID, true) )
+		{
+			update_user_meta( tu()->user->ID, 'tu_started_test_'. $test->ID, time());
+		}
+		
 		// render
-		$html = self::render_answers_form( $quest );
+		$html = self::render_answers_form( $question );
 		die( $html );
 	}
 
@@ -288,6 +316,22 @@ class DidaxoLevel
 	}
 
 	/**
+	 * Render del form di errore di risposta
+	 * @return [type] [description]
+	 */
+	public static function render_out_of_time_form( $test )
+	{
+		$time_limit = self::convert_time_to_seconds( $test->get_time_limit() );
+		ob_start(); ?>
+		<form action="#" name="loose-form" class="result-form">
+			<span class="loose-message message">Non hai dato la risposta nel limite dei <?php echo $time_limit ?> secondi! Riguarda il video e prova ancora!</span><br>
+			<input type="submit" value="Riguarda il video!" >
+		</form>
+		<?php 
+		return ob_get_clean();
+	}
+
+	/**
 	 * Controllo Ajax della risposta corretta
 	 * @return [type] [description]
 	 */
@@ -300,31 +344,26 @@ class DidaxoLevel
 				));
 		}
 
-		// ottengo la risposta in formato serizlized
-		// (necessaria per salvare con ajax in trainup)
-		$serialized = '';
-		foreach( $_REQUEST as $key=>$value ) 
-		{
-			$serialized .= $key . '=' . $value . '&';
-		}
-		
 		// riferimento alla domanda
 		$q = Questions::factory( $_REQUEST['tu_question_id'] );
 
 		$test = $q->get_test();
 
-		// resetto il test ed effettuo la nuova prova
-		$positive = self::reset_test( $q, $serialized );
+		// salva la risposta data
+		self::save_answer();
 
-		// il test finisce compunque perchè la risposta la si è data
+		// fine del test
 		tu()->user->finish_test( $test );
 
+		// controllo la correttezza del test intero
+		// (dipendente dalla pecenutale che si è ottenuta)
+		$positive = self::correct_answer( $q );
+
 		$result = array();
-		if( $positive )
+		if( $positive === true )
 		{
 			// TEST SUPERATO
 			// controlla se tutti i test dei sottolivelli sono superati
-
 			$master = self::master_level_complete( tu()->level ) ? 'ok' : 'ko';
 
 			$result['result'] = 'ok';
@@ -336,57 +375,66 @@ class DidaxoLevel
 		{
 			// TEST FALLITO
 			$result['result'] = 'ko';
-			$result['form'] = self::render_wrong_answer_form();
+			if( is_array($positive) && $positive['error'] === 'time_limit' )
+			{
+				$result['form'] = self::render_out_of_time_form( $test );
+			}
+			else 
+			{
+				$result['form'] = self::render_wrong_answer_form();	
+			}
+			
 		}
-
 		
-
 		die(json_encode($result));
 
 	}
 
 
 	/**
-	 * Fa ritentare l'utente di fare una domanda di uno specifico test
+	 * [save_answer description]
+	 * @return [type] risposta di salvataggio del server
+	 */
+	public static function save_answer()
+	{
+		// ottengo la risposta in formato serizlized
+		// (necessaria per salvare con ajax in trainup)
+		$serialized = '';
+		foreach( $_REQUEST as $key=>$value ) 
+		{
+			$serialized .= $key . '=' . $value . '&';
+		}
+
+		// ottengo la risposta
+		return Questions::ajax_save_answer( $serialized );
+	}
+
+
+	/**
+	 * Check della correttezza di una risposta
 	 * @param  [type] $serialized risposta alla domanda in formato serializzato
 	 * @param  [type] $question domanda
 	 * @return boolean se la risposta è corretta
 	 */
-	public static function reset_test( $question, $serialized )
+	public static function correct_answer( $question )
 	{
 		$test = $question->get_test();
-		$acl = tu()->user->can_access_test( $test );
-		// error_log(var_export($acl, true));
-		if( !$acl[0] ) 
+
+		$time_limit = self::convert_time_to_seconds( $test->get_time_limit() );
+		// controllo tempistiche 
+		// deve averci messo meno del tempo limite del test
+		// per farlo devo comunque ottenere l'archive appena inserito,
+		// dato che cancella il meta tu_started_test quindi non si possono 
+		// fare le sottrazioni
+		$archive = tu()->user->get_archive( $test->ID );
+		if(  $archive['duration'] > $time_limit )
 		{
-			die(json_encode(array(
-				'result' => 'ko',
-				'form' => 'Non puoi accedere a questo test'
-				)));
+			return array('error' => 'time_limit');
 		}
 
+		// controllo sull'intero test (filtro sulle risposte in DidaxoQuestion)
+		return $archive['passed'] === '1' ? true : false;
 		
-		$resit = tu()->user->can_resit_test( $test );
-		if( !$resit[0] )
-		{
-			die(json_encode(array(
-				'result' => 'ko',
-				'form' => 'Non puoi ripetere questo test'
-				)));
-		}
-
-		// reset caratteristiche dell'user rispetto al test	
-		tu()->user->resit_test( $test );
-		// inizia il test
-		tu()->user->start_test( $test );
-		// ottengo la risposta
-		$response = Questions::ajax_save_answer( $serialized );
-
-		if( $response['type'] === 'success' )
-		{
-			// controllo se il risultato è corretto
-			return Questions::validate_answer( tu()->user , $question );
-		}
 	}
 
 	/**
@@ -438,6 +486,12 @@ class DidaxoLevel
 		return $completed;
 
 
+	}
+
+	public static function convert_time_to_seconds( $str_time )
+	{
+		sscanf( $str_time, "%d:%d", $minutes, $seconds );
+		return $minutes * 60 + $seconds;
 	}
 
 
