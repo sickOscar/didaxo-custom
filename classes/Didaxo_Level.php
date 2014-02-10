@@ -11,6 +11,10 @@ class DidaxoLevel
 {
 
 	public static $_video;
+	public static $_video_sd_url;
+	public static $_video_hd_url;
+	public static $_video_mobile_url;
+	public static $_video_hls_url;
 
 	public $_master;
 
@@ -34,6 +38,7 @@ class DidaxoLevel
 
 	const SHOW_TIME = 'wpcf-show_time';
 
+	
 
 	/**
 	 * [__construct description]
@@ -63,12 +68,17 @@ class DidaxoLevel
 
 		// reperimento risorsa video
 		$resources = $this->_master->get_resources();
-		$video_array = get_post_custom_values( self::VIDEO_ID, $resources[0]->ID);
+		self::$_video = get_post_meta( $resources[0]->ID, self::VIDEO_ID, true);
 
-		self::$_video = $video_array[0];
+		self::$_video_sd_url = get_post_meta( $resources[0]->ID, self::VIDEO_SD_URL, true);
+		self::$_video_hd_url = get_post_meta( $resources[0]->ID, self::VIDEO_HD_URL, true);
+		self::$_video_mobile_url = get_post_meta( $resources[0]->ID, self::VIDEO_MOBILE_URL, true);
+		self::$_video_hls_url = get_post_meta( $resources[0]->ID, self::VIDEO_HLS_URL, true);
 		
-		// costruzione player ( tramite shortcode )
+		// costruzione player vimeo ( tramite shortcode )
 		add_shortcode( 'didaxo_vimeo_player', array( &$this, 'buildVimeoPlayerShortcode' ) );
+		// costruzione player mediaelement.js ( tramite shortcode )
+		add_shortcode( 'didaxo_mediaelement_player', array( &$this, 'buildMediaElementPlayerShortcode' ) );
 
 	}
 
@@ -81,8 +91,6 @@ class DidaxoLevel
 		// caricamento script necessari per API Vimeo
 		wp_enqueue_script( 'froogaloop' );
 		wp_enqueue_script( 'didaxo-level-vimeoapi' );
-
-
 		ob_start();
 		?>
 		<div id="didaxo-player-wrapper">
@@ -97,18 +105,28 @@ class DidaxoLevel
 	}
 
 	/**
-	 * [buildPlayerShortcode description]
-	 * @return [type] [description]
+	 * Costruisce il player con le librerie mediaelement. 
+	 * Necessita del plugin Wordpress MediaElementJs
+	 * @url: http://wordpress.org/plugins/media-element-html5-video-and-audio-player/
+	 * @param  [type] $atts [description]
+	 * @return [type]       [description]
 	 */
-	public function buildMediaElementsPlayerShortcode( $atts )
+	public function buildMediaElementPlayerShortcode( $atts )
 	{
-		// caricamento script necessari per API Vimeo
-		wp_enqueue_script( 'froogaloop' );
-		wp_enqueue_script( 'didaxo-level-mediaelements' );
-		ob_start();
-		?>
+		wp_enqueue_style( 'mediaelement-style');
+		wp_enqueue_script( 'mediaelement' );
+		wp_enqueue_script( 'didaxo-level-mediaelement' );
+		ob_start() ?>
 		<div id="didaxo-player-wrapper">
-			
+			<video width="600" height="300" controls="controls" preload="none"  >
+				<!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
+				<source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" />
+				<object width="600" height="300" type="application/x-shockwave-flash" data="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf">
+					<param name="movie" value="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf" />
+					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" />
+					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="360" alt="No video playback" title="No video playback capabilities, sorry!" />
+				</object>		
+			</video>
 			<p>
 				<button class="play">Play</button>
 				<button class="pause">Pause</button>

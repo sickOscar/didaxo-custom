@@ -15,9 +15,8 @@ jQuery(function($) {
 			var base = this;
 			base.$el = $(el);
 			base.el = el;
-			var currentStep = 0,
-				vimeoPlayer,
-				froogaloop;
+			base.$video = base.$el.find('video');
+			var currentStep = 0;
 
 			base.$el.data("didaxo.Player", base);
 
@@ -41,9 +40,15 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.buildPlayer = function() {
-				vimeoPlayer = base.el.querySelectorAll('iframe');
-				froogaloop = $f(vimeoPlayer[0]);
-				froogaloop.addEvent('ready', base.playerReady);
+				// vimeoPlayer = base.el.querySelectorAll('iframe');
+				// froogaloop = $f(vimeoPlayer[0]);
+				// froogaloop.addEvent('ready', base.playerReady);
+				
+				base.player = new MediaElementPlayer( base.$video, {
+					features: ['playpause','current','duration','volume'],
+					enableKeyboard: false
+				} );
+			
 			};
 
 			/**
