@@ -61,6 +61,10 @@ class DidaxoLevel
 			'ajaxurl' => admin_url( 'admin-ajax.php' )
 			));
 
+		wp_localize_script( 'didaxo-level-mediaelement', 'didaxo_ajax', array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' )
+			));
+
 		add_action( 'wp_head', array( &$this, 'buildSteps' ) );
 
 		// ottengo il livello tu
@@ -120,10 +124,12 @@ class DidaxoLevel
 		<div id="didaxo-player-wrapper">
 			<video width="600" height="300" controls="controls" preload="none"  >
 				<!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
-				<source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" />
+				<!-- <source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" /> -->
+				<source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" />
 				<object width="600" height="300" type="application/x-shockwave-flash" data="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf">
 					<param name="movie" value="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf" />
-					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" />
+					<!-- <param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" /> -->
+					<param name="flashvars" value="controls=true&amp;file=<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4 ?>" />
 					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="360" alt="No video playback" title="No video playback capabilities, sorry!" />
 				</object>		
 			</video>

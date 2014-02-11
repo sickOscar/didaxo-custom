@@ -16,7 +16,12 @@ jQuery(function($) {
 			base.$el = $(el);
 			base.el = el;
 			base.$video = base.$el.find('video');
-			var currentStep = 0;
+			base.$media = undefined;
+			var currentStep = 0,
+				player,
+				_loadComplete = false,
+				_metadataComplete = false;
+
 
 			base.$el.data("didaxo.Player", base);
 
@@ -44,11 +49,31 @@ jQuery(function($) {
 				// froogaloop = $f(vimeoPlayer[0]);
 				// froogaloop.addEvent('ready', base.playerReady);
 				
-				base.player = new MediaElementPlayer( base.$video, {
+				this.player = new MediaElementPlayer( base.$video, {
 					features: ['playpause','current','duration','volume'],
-					enableKeyboard: false
+					enableKeyboard: false,
+					success: function( media, node, player ) {
+						base.$media = $(media);
+						base.player = base.$media[0].player;
+						// this.player.setCurrentTime( convertToSeconds($.didaxo.steps[currentStep].timerStart) );
+						base.$media[0].addEventListener( 'loadeddata', base.loadComplete );
+						base.$media[0].addEventListener( 'loadedmetadata', base.metadataComplete );
+					}
 				} );
 			
+			};
+
+
+			base.loadComplete = function(e) {
+				console.log( 'loaded Data' );
+				_loadComplete = true;
+				base.playerReady();
+			};
+
+			base.metadataComplete = function(e) {
+				console.log( 'loaded Metadata' );
+				_metadataComplete = true;
+				base.playerReady();
 			};
 
 			/**
@@ -57,6 +82,11 @@ jQuery(function($) {
 			 * @return {[type]}          [description]
 			 */
 			base.playerReady = function(playerId) {
+				console.log( 'player ready');
+				if( !(_loadComplete && _metadataComplete) ) {
+					console.log( 'falsy');
+					return false;
+				}
 				var playButton = base.$el.find('.play');
 				var pauseButton = base.$el.find('.pause');
 
@@ -65,12 +95,16 @@ jQuery(function($) {
 
 				// se esiste almeno un passo
 				if ($.didaxo.steps.length > 0) {
-					froogaloop.api('seekTo', convertToSeconds($.didaxo.steps[currentStep].timerStart));
-					froogaloop.api('pause');
-					// add event
-					froogaloop.addEvent('playProgress', base.stepListener);
+					// froogaloop.api('seekTo', convertToSeconds($.didaxo.steps[currentStep].timerStart));
+					// froogaloop.api('pause');
+					// // add event
+					// this.player.addEventListener('playProgress', base.stepListener);
+					console.log( 'seek to ' + convertToSeconds($.didaxo.steps[currentStep].timerStart));
+					base.player.setCurrentTime( convertToSeconds($.didaxo.steps[currentStep].timerStart) );
+					// this.player.media.setCurrentTime( 30 );
+					// base.player.pause();
+					base.$media[0].addEventListener( 'timeupdate', base.stepListener );
 				}
-
 
 			};
 
@@ -79,13 +113,17 @@ jQuery(function($) {
 			 * @param  {[type]} data [description]
 			 * @return {[type]}      [description]
 			 */
-			base.stepListener = function(data) {
-				if (parseInt(data.seconds, 10) == convertToSeconds($.didaxo.steps[currentStep].question_time)) {
-					// remove Event
-					froogaloop.removeEvent('playProgress');
-					// froogaloop actions
-					froogaloop.api('pause');
-					base.buildTest($.didaxo.steps[currentStep]);
+			base.stepListener = function(ev) {
+				// if (parseInt(data.seconds, 10) == convertToSeconds($.didaxo.steps[currentStep].question_time)) {
+				// 	// remove Event
+				// 	froogaloop.removeEvent('playProgress');
+				// 	// froogaloop actions
+				// 	froogaloop.api('pause');
+				// 	base.buildTest($.didaxo.steps[currentStep]);
+				// }
+				if( parseInt(base.$media[0].currentTime, 10) === convertToSeconds($.didaxo.steps[currentStep].question_time) ) {
+					base.$media[0].removeEventListener('timeupdate', base.stepListener);
+					base.buildTest( $.didaxo.steps[currentStep] );
 				}
 			};
 
@@ -96,7 +134,7 @@ jQuery(function($) {
 			 * @return {[type]}   [description]
 			 */
 			base.play = function(e) {
-				froogaloop.api('play');
+				base.player.play();
 				return false;
 			};
 
@@ -106,7 +144,7 @@ jQuery(function($) {
 			 * @return {[type]}   [description]
 			 */
 			base.pause = function(e) {
-				froogaloop.api('pause');
+				base.player.pause();
 				return false;
 			};
 
@@ -216,7 +254,8 @@ jQuery(function($) {
 					base.resetPlayer();
 					base.showPlayer(function() {
 						// Anche aggiunta listener
-						froogaloop.addEvent('playProgress', base.stepListener);
+						base.$media[0].addEventListener('timeupdate', base.stepListener);
+						// froogaloop.addEvent('playProgress', base.stepListener);
 						base.play();
 					});
 					return false;
@@ -235,7 +274,8 @@ jQuery(function($) {
 				if (++currentStep < $.didaxo.steps.length) {
 					base.resetPlayer();
 					// Anche aggiunta listener
-					froogaloop.addEvent('playProgress', base.stepListener);
+					// froogaloop.addEvent('playProgress', base.stepListener);
+					base.$media[0].addEventListener( 'timeupdate', base.stepListener );
 				}
 
 				base.showPlayer(function() {
@@ -268,10 +308,12 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.resetPlayer = function() {
-				froogaloop.api('seekTo', convertToSeconds($.didaxo.steps[currentStep].timerStart));
+				//froogaloop.api('seekTo', convertToSeconds($.didaxo.steps[currentStep].timerStart));
+				base.player.setCurrentTime( convertToSeconds($.didaxo.steps[currentStep].timerStart) );
 
 				// add event
-				froogaloop.addEvent('playProgress', base.stepListener);
+				//froogaloop.addEvent('playProgress', base.stepListener);
+				base.$media[0].addEventListener( 'timeupdate', base.stepListener );
 			};
 
 			/**
@@ -344,7 +386,7 @@ jQuery(function($) {
 		var parts = input.split(':'),
 			minutes = +parts[0],
 			seconds = +parts[1];
-		return (minutes * 60 + seconds).toFixed(3);
+		return parseInt(minutes * 60 + seconds, 10);
 	}
 
 });
