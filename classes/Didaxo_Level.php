@@ -43,9 +43,15 @@ class DidaxoLevel
 	/**
 	 * [__construct description]
 	 */
-	public function __construct() 
+	public function __construct( $post_admin = null ) 
 	{
-		$this->init();	
+		if( $post_admin === 'post_admin' )
+		{
+
+		} 
+		else {
+			$this->init();		
+		}
 	}
 
 
@@ -56,6 +62,8 @@ class DidaxoLevel
 	public function init(){
 
 		global $post;
+
+		add_filter( 'tu_level_options', array( $this, 'level_options' ) );
 
 		wp_localize_script( 'didaxo-level-vimeoapi', 'didaxo_ajax', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' )
@@ -70,14 +78,15 @@ class DidaxoLevel
 		// ottengo il livello tu
 		$this->_master = new Level( tu()->level->ID );
 
-		// reperimento risorsa video
-		$resources = $this->_master->get_resources();
-		self::$_video = get_post_meta( $resources[0]->ID, self::VIDEO_ID, true);
+		error_log( var_export($this->_master, true) );
 
-		self::$_video_sd_url = get_post_meta( $resources[0]->ID, self::VIDEO_SD_URL, true);
-		self::$_video_hd_url = get_post_meta( $resources[0]->ID, self::VIDEO_HD_URL, true);
-		self::$_video_mobile_url = get_post_meta( $resources[0]->ID, self::VIDEO_MOBILE_URL, true);
-		self::$_video_hls_url = get_post_meta( $resources[0]->ID, self::VIDEO_HLS_URL, true);
+		// reperimento risorsa video
+		self::$_video = get_post_meta( $this->_master->ID, self::VIDEO_ID, true);
+
+		self::$_video_sd_url = get_post_meta( $this->_master->ID, self::VIDEO_SD_URL, true);
+		self::$_video_hd_url = get_post_meta( $this->_master->ID, self::VIDEO_HD_URL, true);
+		self::$_video_mobile_url = get_post_meta( $this->_master->ID, self::VIDEO_MOBILE_URL, true);
+		self::$_video_hls_url = get_post_meta( $this->_master->ID, self::VIDEO_HLS_URL, true);
 		
 		// costruzione player vimeo ( tramite shortcode )
 		add_shortcode( 'didaxo_vimeo_player', array( &$this, 'buildVimeoPlayerShortcode' ) );
@@ -124,12 +133,12 @@ class DidaxoLevel
 		<div id="didaxo-player-wrapper">
 			<video width="600" height="300" controls="controls" preload="none"  >
 				<!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
-				<!-- <source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" /> -->
-				<source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" />
+				<source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" /> 
+				<!-- <source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" /> -->
 				<object width="600" height="300" type="application/x-shockwave-flash" data="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf">
 					<param name="movie" value="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf" />
-					<!-- <param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" /> -->
-					<param name="flashvars" value="controls=true&amp;file=<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4 ?>" />
+					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" />
+					<!-- <param name="flashvars" value="controls=true&amp;file=<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4 ?>" /> -->
 					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="360" alt="No video playback" title="No video playback capabilities, sorry!" />
 				</object>		
 			</video>
@@ -254,13 +263,22 @@ class DidaxoLevel
 		$question = Questions::factory( $_REQUEST['question_id'] );
 		$test = $question->get_test();
 
+		// ATTENZIONE
+		// controllo se l'utente aveva precedentemente abbandonato il test
+		// ovvero, se c'è un meta tu_started_test_{$test->ID}, in quel caso lo resetto
+		// all'attuale time, così è come se ricominciasse il test
+		if( get_user_meta( tu()->user->ID, 'tu_started_test_'. $test->ID, true) )
+		{
+			update_user_meta( tu()->user->ID, 'tu_started_test_'. $test->ID, time());
+		}
+
 		$acl = tu()->user->can_access_test( $test );
 		
 		if( !$acl[0] ) 
 		{
 			die(json_encode(array(
 				'result' => 'ko',
-				'form' => 'Non puoi accedere a questo test'
+				'form' => 'Non puoi accedere a questo test: ' . $acl[1]
 				)));
 		}
 
@@ -270,7 +288,7 @@ class DidaxoLevel
 		{
 			die(json_encode(array(
 				'result' => 'ko',
-				'form' => 'Non puoi ripetere questo test'
+				'form' => 'Non puoi ripetere questo test: ' . !$resit[1]
 				)));
 		}
 
@@ -280,14 +298,7 @@ class DidaxoLevel
 		// inizia il test
 		tu()->user->start_test( $test );
 
-		// ATTENZIONE
-		// controllo se l'utente aveva precedentemente abbandonato il test
-		// ovvero, se c'è un meta tu_started_test_{$test->ID}, in quel caso lo resetto
-		// all'attuale time, così è come se ricominciasse il test
-		if( get_user_meta( tu()->user->ID, 'tu_started_test_'. $test->ID, true) )
-		{
-			update_user_meta( tu()->user->ID, 'tu_started_test_'. $test->ID, time());
-		}
+		
 		
 		// render
 		$html = self::render_answers_form( $question );
@@ -549,6 +560,16 @@ class DidaxoLevel
 	{
 		sscanf( $str_time, "%d:%d", $minutes, $seconds );
 		return $minutes * 60 + $seconds;
+	}
+
+	/**
+	 * [level_options description]
+	 * @param  [type] $options [description]
+	 * @return [type]          [description]
+	 */
+	public function level_options( $options )
+	{
+		error_log( var_export($options, true) );
 	}
 
 

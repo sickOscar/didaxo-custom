@@ -17,8 +17,8 @@ jQuery(function($) {
 			base.el = el;
 			base.$video = base.$el.find('video');
 			base.$media = undefined;
+			base.player = undefined;
 			var currentStep = 0,
-				player,
 				_loadComplete = false,
 				_metadataComplete = false;
 
@@ -63,13 +63,22 @@ jQuery(function($) {
 			
 			};
 
-
+			/**
+			 * Controllo del caricamento del video
+			 * @param  {[type]} e [description]
+			 * @return {[type]}   [description]
+			 */
 			base.loadComplete = function(e) {
 				console.log( 'loaded Data' );
 				_loadComplete = true;
 				base.playerReady();
 			};
 
+			/**
+			 * Controllo del caricamento dei metadata
+			 * @param  {[type]} e [description]
+			 * @return {[type]}   [description]
+			 */
 			base.metadataComplete = function(e) {
 				console.log( 'loaded Metadata' );
 				_metadataComplete = true;
@@ -95,13 +104,8 @@ jQuery(function($) {
 
 				// se esiste almeno un passo
 				if ($.didaxo.steps.length > 0) {
-					// froogaloop.api('seekTo', convertToSeconds($.didaxo.steps[currentStep].timerStart));
-					// froogaloop.api('pause');
-					// // add event
-					// this.player.addEventListener('playProgress', base.stepListener);
 					console.log( 'seek to ' + convertToSeconds($.didaxo.steps[currentStep].timerStart));
 					base.player.setCurrentTime( convertToSeconds($.didaxo.steps[currentStep].timerStart) );
-					// this.player.media.setCurrentTime( 30 );
 					// base.player.pause();
 					base.$media[0].addEventListener( 'timeupdate', base.stepListener );
 				}
@@ -114,14 +118,9 @@ jQuery(function($) {
 			 * @return {[type]}      [description]
 			 */
 			base.stepListener = function(ev) {
-				// if (parseInt(data.seconds, 10) == convertToSeconds($.didaxo.steps[currentStep].question_time)) {
-				// 	// remove Event
-				// 	froogaloop.removeEvent('playProgress');
-				// 	// froogaloop actions
-				// 	froogaloop.api('pause');
-				// 	base.buildTest($.didaxo.steps[currentStep]);
-				// }
+				// arrivo nel momento della domanda
 				if( parseInt(base.$media[0].currentTime, 10) === convertToSeconds($.didaxo.steps[currentStep].question_time) ) {
+					base.pause();
 					base.$media[0].removeEventListener('timeupdate', base.stepListener);
 					base.buildTest( $.didaxo.steps[currentStep] );
 				}
@@ -206,7 +205,7 @@ jQuery(function($) {
 							}
 
 							if (response.master === 'ok') {
-								alert('Completato il livello principale');
+								console.log('Completato il livello principale');
 							}
 
 							$form.hide();
@@ -230,11 +229,13 @@ jQuery(function($) {
 				 */
 				$('body').on('submit', 'form[name="win-form"]', function(ev) {
 
+					ev.preventDefault();
+
 					$('form[name="win-form"]').fadeOut(function() {
 						$(this).remove();
 					});
 
-					base.nextStep();
+					base.resetPlayer( true );
 					return false;
 				});
 
@@ -245,19 +246,15 @@ jQuery(function($) {
 				 */
 				$('body').on('submit', 'form[name="loose-form"]', function(ev) {
 
+					ev.preventDefault();
+
 					$('form[name="loose-form"]').fadeOut(function(ev) {
 						$(this).remove();
 					});
 
 					// il player torna alla posizione orginale e 
 					// viene mostrato il video e fatto partire
-					base.resetPlayer();
-					base.showPlayer(function() {
-						// Anche aggiunta listener
-						base.$media[0].addEventListener('timeupdate', base.stepListener);
-						// froogaloop.addEvent('playProgress', base.stepListener);
-						base.play();
-					});
+					base.resetPlayer( false );
 					return false;
 				});
 
@@ -269,19 +266,8 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.nextStep = function() {
-				// se non sono arrivato all'ultimo step prima della fine
-				// del video
-				if (++currentStep < $.didaxo.steps.length) {
-					base.resetPlayer();
-					// Anche aggiunta listener
-					// froogaloop.addEvent('playProgress', base.stepListener);
-					base.$media[0].addEventListener( 'timeupdate', base.stepListener );
-				}
-
-				base.showPlayer(function() {
-					base.play();
-				});
-
+				++currentStep;
+				//base.resetPlayer();
 			};
 
 			/**
@@ -303,17 +289,33 @@ jQuery(function($) {
 			};
 
 			/**
-			 * resetta il timer del player all'inizio dello step corrent
+			 * resetta il timer del player 
 			 * preso dalla variabile currentStep
 			 * @return {[type]} [description]
 			 */
-			base.resetPlayer = function() {
-				//froogaloop.api('seekTo', convertToSeconds($.didaxo.steps[currentStep].timerStart));
-				base.player.setCurrentTime( convertToSeconds($.didaxo.steps[currentStep].timerStart) );
+			base.resetPlayer = function( rightAnswer ) {
+				var reset_time;
+				if( !rightAnswer ) {
+					reset_time = convertToSeconds($.didaxo.steps[currentStep].timerStart);
+				} else {
+					reset_time = convertToSeconds($.didaxo.steps[currentStep].question_time) + 1;
+					base.nextStep();
+				}
+				base.player.setCurrentTime( reset_time );
 
-				// add event
-				//froogaloop.addEvent('playProgress', base.stepListener);
-				base.$media[0].addEventListener( 'timeupdate', base.stepListener );
+				// se non sono arrivato all'ultimo step prima della fine
+				// del video
+				if (currentStep < $.didaxo.steps.length) {
+					// Anche aggiunta listener
+					// froogaloop.addEvent('playProgress', base.stepListener);
+					console.log( currentStep + '  --  ' + $.didaxo.steps.length);
+					base.$media[0].addEventListener( 'timeupdate', base.stepListener );
+				}
+
+				base.showPlayer(function() {
+					base.play();
+				});
+
 			};
 
 			/**
