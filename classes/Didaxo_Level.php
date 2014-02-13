@@ -108,10 +108,10 @@ class DidaxoLevel
 		?>
 		<div id="didaxo-player-wrapper">
 			<iframe id="didaxo-player" src="http://player.vimeo.com/video/<?php echo self::$_video ?>?api=1&amp;player_id=didaxo-player&amp;badge=0&amp;portrait=0&amp;title=0&amp;byline=0" width="540" height="304" frameborder="0"></iframe>
-			<p>
+			<!-- <p>
 				<button class="play">Play</button>
 				<button class="pause">Pause</button>
-			</p>
+			</p> -->
 		</div>
 		<?php
 		return ob_get_clean();
@@ -127,14 +127,16 @@ class DidaxoLevel
 	public function buildMediaElementPlayerShortcode( $atts )
 	{
 		wp_enqueue_style( 'mediaelement-style');
+		wp_enqueue_style( 'iosfix-style');
 		wp_enqueue_script( 'mediaelement' );
 		wp_enqueue_script( 'didaxo-level-mediaelement' );
+
 		ob_start() ?>
 		<div id="didaxo-player-wrapper">
 			<video width="600" height="300" controls="controls" preload="none"  >
 				<!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
-				<source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" /> 
-				<!-- <source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" /> -->
+				<!-- <source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" />  -->
+				<source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" />
 				<object width="600" height="300" type="application/x-shockwave-flash" data="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf">
 					<param name="movie" value="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf" />
 					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" />
@@ -142,10 +144,10 @@ class DidaxoLevel
 					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="360" alt="No video playback" title="No video playback capabilities, sorry!" />
 				</object>		
 			</video>
-			<p>
+			<!-- <p>
 				<button class="play">Play</button>
 				<button class="pause">Pause</button>
-			</p>
+			</p> -->
 		</div>
 		<?php
 		return ob_get_clean();

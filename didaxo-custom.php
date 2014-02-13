@@ -89,6 +89,7 @@ class DidaxoCustom
 		wp_register_script('mediaelement', DIDAXO_URL . '/mediaelement/mediaelement-and-player.min.js');
 		wp_register_script('didaxo-level-mediaelement', DIDAXO_URL . '/js/didaxo_level_mediaElements.js', array('jquery', 'mediaelement'), false, true );
 		wp_register_style('mediaelement-style', DIDAXO_URL . '/mediaelement/mediaelementplayer.min.css');
+		wp_register_style('iosfix-style', DIDAXO_URL . '/css/iOSFIx.min.css');
 	}
 
 	
