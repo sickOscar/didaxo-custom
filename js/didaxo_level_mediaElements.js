@@ -39,7 +39,7 @@ jQuery(function($) {
 
 			if ( isiOS ) {
 				var video = base.$video[0];
-				video.addEventListener('contextmenu', function(e) {
+				addEvent( video, 'contextmenu', function(e) {
 					e.preventDefault();
 					e.stopPropagation();
 				}, false);
@@ -72,9 +72,6 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.buildPlayer = function() {
-				// vimeoPlayer = base.el.querySelectorAll('iframe');
-				// froogaloop = $f(vimeoPlayer[0]);
-				// froogaloop.addEvent('ready', base.playerReady);
 				
 				this.player = new MediaElementPlayer( base.$video, {
 					plugins: ['flash', 'silverlight'],
@@ -85,7 +82,7 @@ jQuery(function($) {
 						if( mediaElement.pluginType === 'flash' ) {
 							// evneto canplay: lanciato quando inizia a caricare il video
 							// con plugin flash
-							mediaElement.addEventListener( 'canplay', function() {
+							addEvent(mediaElement, 'canplay', function() {
 
 								base.$media = $(mediaElement);
 								base.player = mediaElement;
@@ -101,8 +98,8 @@ jQuery(function($) {
 							base.$media = $(mediaElement);
 							base.player = mediaElement.player;
 							
-							base.$media[0].addEventListener( 'loadeddata', base.loadComplete );
-							base.$media[0].addEventListener( 'loadedmetadata', base.metadataComplete );
+							addEvent(base.$media[0], 'loadeddata', base.loadComplete, false );
+							addEvent(base.$media[0], 'loadedmetadata', base.metadataComplete, false );
 
 						}
 
@@ -151,7 +148,7 @@ jQuery(function($) {
 				if ($.didaxo.steps.length > 0) {
 
 					base.player.setCurrentTime( convertToSeconds($.didaxo.steps[currentStep].timerStart) );
-					base.$media[0].addEventListener( 'timeupdate', base.stepListener );
+					addEvent(base.$media[0], 'timeupdate', base.stepListener, false );
 
 				}
 
@@ -173,11 +170,11 @@ jQuery(function($) {
 
 					// iOS Fix: rimetto il timer al momento di blocco, per fare in modo
 					// che anche schiacciando play non si va avanti
-					if (isiOS) {
+					if ( isiOS ) {
 						base.player.setCurrentTime(convertToSeconds($.didaxo.steps[currentStep].question_time));
 					}
-					// base.$media[0].removeEventListener('timeupdate', base.stepListener);
-					if (!_testBuilt) {
+					
+					if ( !_testBuilt ) {
 						base.buildTest($.didaxo.steps[currentStep]);
 					}
 				}
@@ -295,8 +292,6 @@ jQuery(function($) {
 				 */
 				$('body').on('submit', 'form[name="win-form"]', function(ev) {
 
-					ev.preventDefault();
-
 					$('form[name="win-form"]').slideUp(function() {
 						$(this).remove();
 					});
@@ -312,8 +307,6 @@ jQuery(function($) {
 				 */
 				$('body').on('submit', 'form[name="loose-form"]', function(ev) {
 
-					ev.preventDefault();
-
 					$('form[name="loose-form"]').slideUp(function(ev) {
 						$(this).remove();
 					});
@@ -327,17 +320,15 @@ jQuery(function($) {
 			};
 
 			/**
-			 * Aumento il player di uno step e si occupa di far
-			 * partire il video correttamente
+			 * Aumento il player di uno step
 			 * @return {[type]} [description]
 			 */
 			base.nextStep = function() {
 				++currentStep;
-				//base.resetPlayer();
 			};
 
 			/**
-			 * mostra il player
+			 * nsconde il player
 			 * @param  {Function} callback [description]
 			 * @return {[type]}            [description]
 			 */
@@ -349,14 +340,17 @@ jQuery(function($) {
 						position: 'absolute',
 						left: '-9999px'
 					});
+					if ( callback ) {
+						callback.call( this );
+					}
 				} else {
-					base.$el.slideUp();
+					base.$el.slideUp(callback);
 				}
 				
 			};
 
 			/**
-			 * nasconde il player
+			 * mostra il player
 			 * @param  {Function} callback [description]
 			 * @return {[type]}            [description]
 			 */
@@ -367,6 +361,9 @@ jQuery(function($) {
 					base.$el.css({
 						position: 'static'
 					});
+					if ( callback ) {
+						callback.call( this );
+					}
 				} else {
 					base.$el.slideDown(callback);
 				}
@@ -379,19 +376,22 @@ jQuery(function($) {
 			 */
 			base.resetPlayer = function( rightAnswer ) {
 				var reset_time;
-				_testBuilt = false;
+				
+
 				if( !rightAnswer ) {
 					// setto all'inizio del sottolivello
-					reset_time = convertToSeconds($.didaxo.steps[currentStep].timerStart);
+					reset_time = convertToSeconds($.didaxo.steps[currentStep].timerStart );
 				} else {
 					// setto ad un secondo dopo la domanda
 					reset_time = convertToSeconds($.didaxo.steps[currentStep].question_time) + 1;
 					base.nextStep();
 				}
-				base.player.setCurrentTime( reset_time );
+				
+				_testBuilt = false;
 
 				base.showPlayer(function() {
-					base.play();
+					base.player.setCurrentTime( reset_time );
+					//base.play();
 				});
 
 			};
@@ -402,8 +402,9 @@ jQuery(function($) {
 			 * @return {[type]}
 			 */
 			base.buildTest = function(step) {
-				base.hidePlayer();
+				
 				_testBuilt = true;
+				base.hidePlayer();
 				// reperimento dati
 				$.ajax({
 					type: "POST",
@@ -473,5 +474,30 @@ jQuery(function($) {
 			seconds = +parts[1];
 		return parseInt(minutes * 60 + seconds, 10);
 	}
+
+	function addEvent(obj, evType, fn, useCapture) {
+		if (obj.addEventListener) {
+			obj.addEventListener(evType, fn, useCapture);
+			// console.log( 'added event ' + evType + ' to ' + obj);
+			return true;
+		} else if (obj.attachEvent) {
+			var r = obj.attachEvent("on" + evType, fn);
+			return r;
+		} else {
+			alert("Handler could not be attached");
+		}
+	}
+
+	function removeEvent(obj, evType, fn) {
+		if (obj.removeEventListener) {
+			obj.removeEventListener(evType, fn);
+			return true;
+		} else if (obj.detachEvent) {
+			var r = obj.detachEvent("on" + evType, fn);
+			return r;
+		} else {
+			alert("Handler could not be attached");
+		}
+}
 
 });
