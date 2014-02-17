@@ -274,11 +274,12 @@ jQuery(function($) {
 
 							// Azioni particolari
 							// riservato per eventuali azinoi particolari per caso di risposta
-							if (response.result === 'ok' && response.master !== 'ok') {
+							if (response.result === 'ok') {
 								// refresh della pagina per nuovo step
-								document.location.reload(true);
+								
 							} else {
 								// risposta errata
+								document.location.reload(true);
 							}
 
 							// Azione in caso di fine del livello padre
