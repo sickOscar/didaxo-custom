@@ -454,13 +454,7 @@ jQuery(function($) {
 	})($);
 
 
-	$(document).ready(function() {
-		// creazione player
-		var wrapper = $('#didaxo-player-wrapper');
-		if (wrapper.length) {
-			wrapper.didaxo_Player();
-		}
-	});
+	
 
 	/**
 	 * Converte in secondi una stringa di minuti
@@ -501,3 +495,11 @@ jQuery(function($) {
 }
 
 });
+
+jQuery(document).ready(function($) {
+		// creazione player
+		var wrapper = $('#didaxo-player-wrapper');
+		if (wrapper.length) {
+			wrapper.didaxo_Player();
+		}
+	});
