@@ -18,6 +18,8 @@ class DidaxoLevel
 
 	public $_master;
 
+	public static $_masterId;
+
 
 	/**
 	 * Costanti di riferimento per i nomi dei campi custom
@@ -77,6 +79,8 @@ class DidaxoLevel
 
 		// ottengo il livello tu
 		$this->_master = new Level( tu()->level->ID );
+
+		self::$_masterId = $this->_master->ID;
 
 		error_log( var_export($this->_master, true) );
 
@@ -149,6 +153,21 @@ class DidaxoLevel
 				<button class="pause">Pause</button>
 			</p> -->
 		</div>
+		<ol class="tu-list tu-list-sub-levels">
+			
+			<?php 
+			wp_list_pages(array(
+				'sort_column' => 'menu_order',
+				'sort_order'  => 'ASC',
+				'echo'        => true,
+				'child_of'    => self::$_masterId,
+				'title_li'    => '',
+				'post_type'   => 'tu_level',
+				'walker'      => new DidaxoLevelWalker
+				))
+
+				?>
+		</ol>
 		<?php
 		return ob_get_clean();
 	}
@@ -322,7 +341,7 @@ class DidaxoLevel
 		ob_start(); ?>
 		<form action="#" class="question-form" data-question-id="<?php echo $question->ID ?>" data-nonce="<?php echo $wp_nonce ?>">
 			<div class="question-title">
-				<span><?php echo $question->post_title; ?></span>
+				<span><?php echo apply_filters('the_content', $question->post_content); ?></span>
 			</div>
 			<?php 
 			$index = 0;

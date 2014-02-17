@@ -61,10 +61,28 @@ jQuery(function($) {
 
 				base.buildPlayer();
 
+				base.setSubLevelsClasses();
+
 				if ($.didaxo.steps.length > 0) {
 					base.waitAnswers();
 				}
 			};
+
+
+			base.setSubLevelsClasses = function() {
+
+				var li = $('.tu-list-sub-levels li span');
+				li.addClass('passed');
+
+				$.each( $.didaxo.steps, function(index, el) {
+					if( index === 0 ) {
+						$('.levelId-' + el.levelId).addClass('active');	
+					}
+					$('.levelId-' + el.levelId).removeClass('passed');
+				});
+
+
+			},
 
 			/**
 			 * [buildPlayer description]
@@ -256,8 +274,9 @@ jQuery(function($) {
 
 							// Azioni particolari
 							// riservato per eventuali azinoi particolari per caso di risposta
-							if (response.result === 'ok') {
-								// risposta corretta
+							if (response.result === 'ok' && response.master !== 'ok') {
+								// refresh della pagina per nuovo step
+								document.location.reload(true);
 							} else {
 								// risposta errata
 							}
@@ -324,6 +343,7 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.nextStep = function() {
+				$('.levelId-'+ $.didaxo.steps[currentStep].levelId + ' span').removeClass('active');
 				++currentStep;
 			};
 
@@ -377,12 +397,12 @@ jQuery(function($) {
 			base.resetPlayer = function( rightAnswer ) {
 				var reset_time;
 				
-
 				if( !rightAnswer ) {
 					// setto all'inizio del sottolivello
 					reset_time = convertToSeconds($.didaxo.steps[currentStep].timerStart );
 				} else {
 					// setto ad un secondo dopo la domanda
+					$('.levelId-'+ $.didaxo.steps[currentStep].levelId + ' span').addClass('active');
 					reset_time = convertToSeconds($.didaxo.steps[currentStep].question_time) + 1;
 					base.nextStep();
 				}
