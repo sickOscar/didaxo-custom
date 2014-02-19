@@ -17,6 +17,7 @@ function user_bought_lesson( $order_id  )
 	$items = $order->get_items();
 	foreach( $items as $item )
 	{
-		add_user_meta( tu()->user->ID, '');
+		$group_ID = get_post_meta( get_the_ID(), 'wpcf-trainup_group_id', true );
+		add_user_meta( tu()->user->ID, 'tu_group', $group_ID );
 	}
 }
