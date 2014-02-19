@@ -119,10 +119,6 @@ class DidaxoLevel
 		?>
 		<div id="didaxo-player-wrapper">
 			<iframe id="didaxo-player" src="http://player.vimeo.com/video/<?php echo self::$_video ?>?api=1&amp;player_id=didaxo-player&amp;badge=0&amp;portrait=0&amp;title=0&amp;byline=0" width="540" height="304" frameborder="0"></iframe>
-			<!-- <p>
-				<button class="play">Play</button>
-				<button class="pause">Pause</button>
-			</p> -->
 		</div>
 		<?php
 		return ob_get_clean();
@@ -144,11 +140,25 @@ class DidaxoLevel
 
 		$can_use = true;
 
-		$last_use_time = 0;
-		$user_passed_level = get_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META );
-		if( $user_passed_level ) 
+		// Controllo sul limite di giorni per visualizzare il video
+		$user_passed_time = get_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . tu()->level->ID, true );
+		if( $user_passed_time ) 
 		{
-			error_log( var_export($user_passed_level, true));
+			$limit = get_post_meta( tu()->level->ID, self::TIME_LIMIT, true) * 3600 * 24;
+
+			if( time()  - $limit > intval($user_passed_time)  ) {
+				$can_use = false;
+			}
+		}
+
+		if(!$can_use)
+		{
+			ob_start(); ?>
+ 			<div class="message error">
+ 				<span>Hai superato il limite di <?php echo get_post_meta( tu()->level->ID, self::TIME_LIMIT, true) ?> giorni per visualizzare questo video!</span>
+ 			</div>
+			<?php
+			return ob_get_clean();
 		}
 
 		ob_start() ?>
@@ -164,10 +174,6 @@ class DidaxoLevel
 					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="360" alt="No video playback" title="No video playback capabilities, sorry!" />
 				</object>		
 			</video>
-			<!-- <p>
-				<button class="play">Play</button>
-				<button class="pause">Pause</button>
-			</p> -->
 		</div>
 		<ol class="tu-list tu-list-sub-levels">
 			
@@ -588,7 +594,6 @@ class DidaxoLevel
 		{
 			// setto un campo meta specifico per l'utente, per dire che ha 
 			// già passato questo test
-			update_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . $master->ID, true );
 			update_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . $master->ID, time() );
 		}
 
