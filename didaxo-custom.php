@@ -24,7 +24,7 @@ define( "MEDIAELEMENT_URL", DIDAXO_URL . '/mediaelement' );
 @include( DIDAXO_DIR . 'classes/Didaxo_Walker.php');
 @include( DIDAXO_DIR . 'classes/Didaxo_Level.php');
 @include( DIDAXO_DIR . 'classes/Didaxo_Question.php');
-
+@include( DIDAXO_DIR . 'classes/Woocommerce_adaptor.php');
 
 // error_log( DIDAXO_DIR );
 
