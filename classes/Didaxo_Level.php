@@ -144,7 +144,8 @@ class DidaxoLevel
 		$user_passed_time = get_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . tu()->level->ID, true );
 		if( $user_passed_time ) 
 		{
-			$limit = get_post_meta( tu()->level->ID, self::TIME_LIMIT, true) * 3600 * 24;
+			// $limit = get_post_meta( tu()->level->ID, self::TIME_LIMIT, true) * 3600 * 24;
+			$limit = 60 * 3600 * 24;
 
 			if( time()  - $limit > intval($user_passed_time)  ) {
 				$can_use = false;
