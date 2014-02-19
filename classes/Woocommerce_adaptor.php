@@ -4,7 +4,7 @@ namespace TU;
 
 !defined( 'ABSPATH' ) and exit;
 
-add_action( 'woocommerce_thankyou', 'user_bought_lesson' );
+add_action( 'woocommerce_thankyou', 'TU\user_bought_lesson' );
 
 /**
  * Hook per acquisto lezione
