@@ -68,7 +68,9 @@ jQuery(function($) {
 				}
 			};
 
-
+			/**
+			 * Setta le classi dei sottolivelli
+			 */
 			base.setSubLevelsClasses = function() {
 
 				var li = $('.tu-list-sub-levels li span');
@@ -76,13 +78,13 @@ jQuery(function($) {
 
 				$.each( $.didaxo.steps, function(index, el) {
 					if( index === 0 ) {
-						$('.levelId-' + el.levelId).addClass('active');	
+						$('.levelId-' + el.levelId).addClass('active');
 					}
 					$('.levelId-' + el.levelId).removeClass('passed');
 				});
 
 
-			},
+			};
 
 			/**
 			 * [buildPlayer description]
@@ -216,7 +218,6 @@ jQuery(function($) {
 			 */
 			base.pause = function(e) {
 				base.player.pause();
-				
 				return false;
 			};
 
@@ -279,7 +280,7 @@ jQuery(function($) {
 								
 							} else {
 								// risposta errata
-								document.location.reload(true);
+								//document.location.reload(true);
 							}
 
 							// Azione in caso di fine del livello padre
@@ -327,14 +328,16 @@ jQuery(function($) {
 				 */
 				$('body').on('submit', 'form[name="loose-form"]', function(ev) {
 
-					$('form[name="loose-form"]').slideUp(function(ev) {
-						$(this).remove();
-					});
+					document.location.reload(true);
 
-					// il player torna alla posizione orginale e 
-					// viene mostrato il video e fatto partire
-					base.resetPlayer( false );
-					return false;
+					// $('form[name="loose-form"]').slideUp(function(ev) {
+					// 	$(this).remove();
+					// });
+
+					// // il player torna alla posizione orginale e 
+					// // viene mostrato il video e fatto partire
+					// base.resetPlayer( false );
+					// return false;
 				});
 
 			};
@@ -344,8 +347,15 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.nextStep = function() {
-				$('.levelId-'+ $.didaxo.steps[currentStep].levelId + ' span').removeClass('active');
+				// classi sottolivelli
+				$('.levelId-'+ $.didaxo.steps[currentStep].levelId).removeClass('active');
+				$('.levelId-'+ $.didaxo.steps[currentStep].levelId).addClass('passed');
+
 				++currentStep;
+				// classi sottolivelli
+				if($.didaxo.steps[currentStep]) {
+					$('.levelId-'+ $.didaxo.steps[currentStep].levelId).addClass('active');
+				}
 			};
 
 			/**
@@ -403,9 +413,9 @@ jQuery(function($) {
 					reset_time = convertToSeconds($.didaxo.steps[currentStep].timerStart );
 				} else {
 					// setto ad un secondo dopo la domanda
-					$('.levelId-'+ $.didaxo.steps[currentStep].levelId + ' span').addClass('active');
 					reset_time = convertToSeconds($.didaxo.steps[currentStep].question_time) + 1;
 					base.nextStep();
+					// base.setSubLevelsClasses();
 				}
 				
 				_testBuilt = false;

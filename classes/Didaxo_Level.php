@@ -15,6 +15,7 @@ class DidaxoLevel
 	public static $_video_hd_url;
 	public static $_video_mobile_url;
 	public static $_video_hls_url;
+	public static $_time_limit;
 
 	public $_master;
 
@@ -40,6 +41,9 @@ class DidaxoLevel
 
 	const SHOW_TIME = 'wpcf-show_time';
 
+	const TIME_LIMIT = 'wpcf-time_limit'; // in giorni
+
+	const PASSED_LEVEL_USER_META = 'tu_passed_level_';
 	
 
 	/**
@@ -78,19 +82,22 @@ class DidaxoLevel
 		add_action( 'wp_head', array( &$this, 'buildSteps' ) );
 
 		// ottengo il livello tu
-		$this->_master = new Level( tu()->level->ID );
+		$master_level = new Level( tu()->level->ID );
+		$this->_master = &$master_level;
 
 		self::$_masterId = $this->_master->ID;
 
-		error_log( var_export($this->_master, true) );
+		// error_log( var_export($this->_master, true) );
 
 		// reperimento risorsa video
-		self::$_video = get_post_meta( $this->_master->ID, self::VIDEO_ID, true);
+		// self::$_video = get_post_meta( $this->_master->ID, self::VIDEO_ID, true);
 
 		self::$_video_sd_url = get_post_meta( $this->_master->ID, self::VIDEO_SD_URL, true);
 		self::$_video_hd_url = get_post_meta( $this->_master->ID, self::VIDEO_HD_URL, true);
 		self::$_video_mobile_url = get_post_meta( $this->_master->ID, self::VIDEO_MOBILE_URL, true);
 		self::$_video_hls_url = get_post_meta( $this->_master->ID, self::VIDEO_HLS_URL, true);
+
+		self::$_time_limit = get_post_meta( $this->_master->ID, self::TIME_LIMIT, true);
 		
 		// costruzione player vimeo ( tramite shortcode )
 		add_shortcode( 'didaxo_vimeo_player', array( &$this, 'buildVimeoPlayerShortcode' ) );
@@ -131,9 +138,18 @@ class DidaxoLevel
 	public function buildMediaElementPlayerShortcode( $atts )
 	{
 		wp_enqueue_style( 'mediaelement-style');
-		wp_enqueue_style( 'iosfix-style');
+		// wp_enqueue_style( 'iosfix-style');
 		wp_enqueue_script( 'mediaelement' );
 		wp_enqueue_script( 'didaxo-level-mediaelement' );
+
+		$can_use = true;
+
+		$last_use_time = 0;
+		$user_passed_level = get_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META );
+		if( $user_passed_level ) 
+		{
+			error_log( var_export($user_passed_level, true));
+		}
 
 		ob_start() ?>
 		<div id="didaxo-player-wrapper">
@@ -511,9 +527,15 @@ class DidaxoLevel
 		{
 			return array('error' => 'time_limit');
 		}
+		$passed = $archive['passed'] === '1' ? true : false;
+
+		// $archive = tu()->user->get_result( $test->ID );
+		// if( )
+
+		return $passed;
 
 		// controllo sull'intero test (filtro sulle risposte in DidaxoQuestion)
-		return $archive['passed'] === '1' ? true : false;
+		// return $archive['passed'] === '1' ? true : false;
 		
 	}
 
@@ -566,7 +588,8 @@ class DidaxoLevel
 		{
 			// setto un campo meta specifico per l'utente, per dire che ha 
 			// già passato questo test
-			update_user_meta( tu()->user->ID, 'tu_user_passed_test_' . $master->ID, true );
+			update_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . $master->ID, true );
+			update_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . $master->ID, time() );
 		}
 
 		return $completed;
