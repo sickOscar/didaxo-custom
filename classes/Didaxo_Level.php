@@ -207,7 +207,6 @@ class DidaxoLevel
 				</object>		
 			</video>
 		</div>
-		<?php echo do_shortcode('[didaxo_sublevels_list]') ?>
 		<?php
 		return ob_get_clean();
 
