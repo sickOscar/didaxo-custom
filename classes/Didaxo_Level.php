@@ -21,6 +21,8 @@ class DidaxoLevel
 
 	public static $_masterId;
 
+	public static $video_quality;
+
 
 	/**
 	 * Costanti di riferimento per i nomi dei campi custom
@@ -44,6 +46,10 @@ class DidaxoLevel
 	const TIME_LIMIT = 'wpcf-time_limit'; // in giorni
 
 	const PASSED_LEVEL_USER_META = 'tu_passed_level_';
+
+	const STANDARD_QUALITY = 'sd';
+
+	const HI_QUALITY = 'hd';
 	
 
 	/**
@@ -85,19 +91,21 @@ class DidaxoLevel
 		$master_level = new Level( tu()->level->ID );
 		$this->_master = &$master_level;
 
-		self::$_masterId = $this->_master->ID;
+		self::$_masterId = $master_level->ID;
 
-		// error_log( var_export($this->_master, true) );
+		// error_log( var_export($master_level, true) );
 
 		// reperimento risorsa video
 		// self::$_video = get_post_meta( $this->_master->ID, self::VIDEO_ID, true);
 
-		self::$_video_sd_url = get_post_meta( $this->_master->ID, self::VIDEO_SD_URL, true);
-		self::$_video_hd_url = get_post_meta( $this->_master->ID, self::VIDEO_HD_URL, true);
-		self::$_video_mobile_url = get_post_meta( $this->_master->ID, self::VIDEO_MOBILE_URL, true);
-		self::$_video_hls_url = get_post_meta( $this->_master->ID, self::VIDEO_HLS_URL, true);
+		self::$_video_sd_url = get_post_meta( self::$_masterId, self::VIDEO_SD_URL, true);
+		self::$_video_hd_url = get_post_meta( self::$_masterId, self::VIDEO_HD_URL, true);
+		self::$_video_mobile_url = get_post_meta( self::$_masterId, self::VIDEO_MOBILE_URL, true);
+		self::$_video_hls_url = get_post_meta( self::$_masterId, self::VIDEO_HLS_URL, true);
 
-		self::$_time_limit = get_post_meta( $this->_master->ID, self::TIME_LIMIT, true);
+		self::$_time_limit = get_post_meta( self::$_masterId, self::TIME_LIMIT, true);
+
+
 		
 		// costruzione player vimeo ( tramite shortcode )
 		add_shortcode( 'didaxo_vimeo_player', array( &$this, 'buildVimeoPlayerShortcode' ) );
@@ -148,6 +156,8 @@ class DidaxoLevel
 		return ob_get_clean();
 	}
 
+
+
 	/**
 	 * Costruisce il player con le librerie mediaelement. 
 	 * Necessita del plugin Wordpress MediaElementJs
@@ -155,25 +165,20 @@ class DidaxoLevel
 	 * @param  [type] $atts [description]
 	 * @return [type]       [description]
 	 */
-	public function buildMediaElementPlayerShortcode( $atts )
+	public static function buildRealPlayer( $video_to_show )
 	{
-		// reperire tutti i figli del padre
-
-		wp_enqueue_style( 'mediaelement-style');
-		// wp_enqueue_style( 'iosfix-style');
-		wp_enqueue_script( 'mediaelement' );
-		wp_enqueue_script( 'didaxo-level-mediaelement' );
 
 		$can_use = true;
+		$level_id = self::$_masterId;
 
 		// Controllo sul limite di giorni per visualizzare il video
-		$user_passed_time = get_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . tu()->level->ID, true );
+		$user_passed_time = get_user_meta( tu()->user->ID, self::PASSED_LEVEL_USER_META . $level_id, true );
 		if( $user_passed_time ) 
 		{
 			// $limit = get_post_meta( tu()->level->ID, self::TIME_LIMIT, true) * 3600 * 24;
 			$limit = 60 * 3600 * 24;
 
-			if( time()  - $limit > intval($user_passed_time)  ) {
+			if( time()  - $limit > intval($user_passed_time) ) {
 				$can_use = false;
 			}
 		}
@@ -182,7 +187,7 @@ class DidaxoLevel
 		{
 			ob_start(); ?>
  			<div class="message error">
- 				<span>Hai superato il limite di <?php echo get_post_meta( tu()->level->ID, self::TIME_LIMIT, true) ?> giorni per visualizzare questo video!</span>
+ 				<span>Hai superato il limite di <?php echo get_post_meta( $level_id, self::TIME_LIMIT, true) ?> giorni per visualizzare questo video!</span>
  			</div>
 			<?php
 			return ob_get_clean();
@@ -192,11 +197,11 @@ class DidaxoLevel
 		<div id="didaxo-player-wrapper">
 			<video width="600" height="337" controls="controls" preload="none"  >
 				<!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
-				<source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" />
+				<source type="video/mp4" src="<?php echo $video_to_show; ?>" />
 				<!-- <source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" /> -->
 				<object width="600" height="337" type="application/x-shockwave-flash" data="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf">
 					<param name="movie" value="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf" />
-					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode(self::$_video_sd_url); ?>" />
+					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode($video_to_show); ?>" />
 					<!-- <param name="flashvars" value="controls=true&amp;file=<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4 ?>" /> -->
 					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="337" alt="No video playback" title="No video playback capabilities, sorry!" />
 				</object>		
@@ -205,6 +210,79 @@ class DidaxoLevel
 		<?php echo do_shortcode('[didaxo_sublevels_list]') ?>
 		<?php
 		return ob_get_clean();
+
+
+	}
+
+	/**
+	 * Prompt della scelta della qualità del video
+	 * @url: http://wordpress.org/plugins/media-element-html5-video-and-audio-player/
+	 * @param  [type] $atts [description]
+	 * @return [type]       [description]
+	 */
+	public function buildMediaElementPlayerShortcode( $atts )
+	{
+
+		wp_enqueue_style( 'mediaelement-style');
+		// wp_enqueue_style( 'iosfix-style');
+		wp_enqueue_script( 'mediaelement' );
+		wp_enqueue_script( 'didaxo-level-mediaelement' );
+
+		if( isset($_COOKIE['didaxo_video_quality']) ) :
+			self::$video_quality = $_COOKIE['didaxo_video_quality'];
+
+			if( self::$video_quality === 'hd' )
+			{
+				return self::buildRealPlayer( self::$_video_hd_url );
+			}
+			else 
+			{
+				return self::buildRealPlayer( self::$_video_sd_url );	
+			}
+		else :
+			ob_start(); 
+		?>
+		<div class="didaxo-custom-wrapper">
+			<form action="#" id="quality-selection">
+				<p>Scegli la qualità del video</p>
+				<ul>
+					<input type="hidden" name="quality" value="">
+					<li><input type="submit" name="sd" data-quality="sd" data-video="<?php echo self::$_video_sd_url ?>" value="Standard Definition"></li>
+					<li><input type="submit" name="hd" data-quality="hd" data-video="<?php echo self::$_video_sd_url ?>" value="High Definition"></li>
+				</ul>
+			</form>
+		</div>
+		<?php
+		endif;
+		return ob_get_clean();
+	}
+
+	/**
+	 * [_ajax_chooseDefinition description]
+	 * @return [type] [description]
+	 */
+	public static function _ajax_chooseDefinition()
+	{
+
+		$response;
+
+		if( isset($_REQUEST['quality']) )
+		{
+			$response = array(
+				'result' => 'ok',
+				'data' => self::buildRealPlayer( $_REQUEST['quality'] )
+			);
+		}
+		else
+		{
+			$response = array(
+				'result' => 'ko',
+				'data' => 'errore'
+			);
+		}
+		echo json_encode($response);
+		die();
+		
 	}
 
 	/**

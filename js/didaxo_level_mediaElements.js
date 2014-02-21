@@ -53,10 +53,10 @@ jQuery(function($) {
 			base.$el.data("didaxo.Player", base);
 
 			/**
-			 * Inizializzazione
+			 * [initPlayer description]
 			 * @return {[type]} [description]
 			 */
-			base.init = function() {
+			base.initPlayer = function() {
 				base.options = $.extend({}, $.didaxo.Player.defaultOptions, options);
 
 				base.buildPlayer();
@@ -66,6 +66,69 @@ jQuery(function($) {
 				if ($.didaxo.steps.length > 0) {
 					base.waitAnswers();
 				}
+			};
+
+			/**
+			 * Inizializzazione
+			 * @return {[type]} [description]
+			 */
+			base.init = function() {
+				
+				if( $('#didaxo-player-wrapper').length ) {
+					base.initPlayer();
+					return true;
+				}
+
+				base.waitQualityChoice();
+
+			};
+
+			/**
+			 * [waitQualityChoice description]
+			 * @return {[type]} [description]
+			 */
+			base.waitQualityChoice = function() {
+
+				$('body').on( 'click', 'form#quality-selection input[type=submit]', function( ev ) {
+					ev.preventDefault();
+
+					$.ajax({
+						type: "POST",
+						// dataType : "json",
+						url: didaxo_ajax.ajaxurl,
+						data: {
+							action: "chooseDefinition",
+							quality: $(ev.target).data('video')
+						},
+						success: function(response) {
+							var json = $.parseJSON(response);
+
+							document.cookie = "didaxo_video_quality=" + $(ev.target).data('quality');
+
+							$('form#quality-selection').slideUp( function() {
+								$(this).remove();
+								$wrapper = $('.didaxo-custom-wrapper');
+								$wrapper.hide();
+								$wrapper.append( $(json.data) );
+
+								
+
+								$wrapper.slideDown(function() {
+									var player = $('#didaxo-player-wrapper');
+									player.didaxo_Player();
+
+									$('body').data('didaxo.Player', undefined);
+								});
+							});
+						}
+					});
+
+					return false;
+				});
+			};
+
+			base.handleQualityChoice = function( data ) {
+
 			};
 
 			/**
@@ -606,5 +669,7 @@ jQuery(document).ready(function($) {
 		var wrapper = $('#didaxo-player-wrapper');
 		if (wrapper.length) {
 			wrapper.didaxo_Player();
+		} else {
+			$('body').didaxo_Player();
 		}
 	});

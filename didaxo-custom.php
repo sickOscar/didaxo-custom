@@ -102,6 +102,9 @@ if ( is_plugin_active('train-up/index.php') ) {
 	} );
 
 	// AJAX
+	// choose definition
+	add_action( 'wp_ajax_chooseDefinition', array( 'TU\DidaxoLevel', '_ajax_chooseDefinition') );
+	add_action( 'wp_ajax_nopriv_chooseDefinition', array( 'TU\DidaxoLevel', '_ajax_chooseDefinition') );
 	// retrieve test
 	add_action( 'wp_ajax_retrieveTest', array( 'TU\DidaxoLevel', '_ajax_retrieveTest') );
 	add_action( 'wp_ajax_nopriv_retrieveTest', array( 'TU\DidaxoLevel', '_ajax_retrieveTest') );
