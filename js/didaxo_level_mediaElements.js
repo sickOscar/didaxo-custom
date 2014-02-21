@@ -95,7 +95,7 @@ jQuery(function($) {
 				
 				this.player = new MediaElementPlayer( base.$video, {
 					plugins: ['flash', 'silverlight'],
-					features: ['playpause','current','duration','volume'],
+					features: ['playpause','current','duration','volume','fullscreen'],
 					enableKeyboard: false,
 					success: function( mediaElement, node, player ) {
 						// Flash / silverlight Plugin Bug FIx
@@ -364,6 +364,7 @@ jQuery(function($) {
 			 * @return {[type]}            [description]
 			 */
 			base.hidePlayer = function(callback) {
+				base.exitFullScreen();
 				if( _isFlash ) {
 					// non posso usare una transizione che manda in display: none 
 					// bug Flash fallback
@@ -460,6 +461,32 @@ jQuery(function($) {
 
 			};
 
+			/**
+			 * Vai in fullscreen
+			 * @return {[type]} [description]
+			 */
+			base.requestFullScreen = function() {
+
+			};
+
+			/**
+			 * togli fullscreen
+			 * @return {[type]} [description]
+			 */
+			base.exitFullScreen = function() {
+				if ( document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement ) {  // current working methods
+					if (document.exitFullscreen) {
+						document.exitFullscreen();
+					} else if (document.msExitFullscreen) {
+						document.msExitFullscreen();
+					} else if (document.mozCancelFullScreen) {
+						document.mozCancelFullScreen();
+					} else if (document.webkitExitFullscreen) {
+						document.webkitExitFullscreen();
+					}
+				}
+			};
+
 			base.init();
 
 			return {
@@ -523,7 +550,54 @@ jQuery(function($) {
 		} else {
 			alert("Handler could not be attached");
 		}
-}
+	}
+
+	
+
+	function toggleFullScreen() {
+		if (!document.fullscreenElement && // alternative standard method
+			!document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) { // current working methods
+			if (document.documentElement.requestFullscreen) {
+				document.documentElement.requestFullscreen();
+			} else if (document.documentElement.msRequestFullscreen) {
+				document.documentElement.msRequestFullscreen();
+			} else if (document.documentElement.mozRequestFullScreen) {
+				document.documentElement.mozRequestFullScreen();
+			} else if (document.documentElement.webkitRequestFullscreen) {
+				document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+			}
+		} else {
+			if (document.exitFullscreen) {
+				document.exitFullscreen();
+			} else if (document.msExitFullscreen) {
+				document.msExitFullscreen();
+			} else if (document.mozCancelFullScreen) {
+				document.mozCancelFullScreen();
+			} else if (document.webkitExitFullscreen) {
+				document.webkitExitFullscreen();
+			}
+		}
+	}
+
+	/**
+	 * Prefixer
+	 * @return {[type]} [description]
+	 */
+	var prefix = (function() {
+		var styles = window.getComputedStyle(document.documentElement, ''),
+			pre = (Array.prototype.slice
+				.call(styles)
+				.join('')
+				.match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
+			)[1],
+			dom = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))[1];
+		return {
+			dom: dom,
+			lowercase: pre,
+			css: '-' + pre + '-',
+			js: pre[0].toUpperCase() + pre.substr(1)
+		};
+	})();
 
 });
 

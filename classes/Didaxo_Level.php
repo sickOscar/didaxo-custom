@@ -103,7 +103,31 @@ class DidaxoLevel
 		add_shortcode( 'didaxo_vimeo_player', array( &$this, 'buildVimeoPlayerShortcode' ) );
 		// costruzione player mediaelement.js ( tramite shortcode )
 		add_shortcode( 'didaxo_mediaelement_player', array( &$this, 'buildMediaElementPlayerShortcode' ) );
+		// elenco sottolivelli
+		add_shortcode( 'didaxo_sublevels_list', array( &$this, 'buildSublevelsList' ) );
 
+	}
+
+	public function buildSublevelsList( $atts )
+	{
+		ob_start(); ?>
+			<ol class="tu-list tu-list-sub-levels">
+				<?php 
+
+				$list = wp_list_pages(array(
+						'sort_column' => 'menu_order',
+						'sort_order'  => 'ASC',
+						'echo'        => true,
+						'child_of'    => self::$_masterId,
+						'title_li'    => '',
+						'post_type'   => 'tu_level',
+						'walker'      => new DidaxoLevelWalker
+				));
+
+				 ?>
+			</ol>
+		<?php
+		return ob_get_clean();
 	}
 
 	/**
@@ -133,6 +157,8 @@ class DidaxoLevel
 	 */
 	public function buildMediaElementPlayerShortcode( $atts )
 	{
+		// reperire tutti i figli del padre
+
 		wp_enqueue_style( 'mediaelement-style');
 		// wp_enqueue_style( 'iosfix-style');
 		wp_enqueue_script( 'mediaelement' );
@@ -176,21 +202,7 @@ class DidaxoLevel
 				</object>		
 			</video>
 		</div>
-		<ol class="tu-list tu-list-sub-levels">
-			
-			<?php 
-			wp_list_pages(array(
-				'sort_column' => 'menu_order',
-				'sort_order'  => 'ASC',
-				'echo'        => true,
-				'child_of'    => self::$_masterId,
-				'title_li'    => '',
-				'post_type'   => 'tu_level',
-				'walker'      => new DidaxoLevelWalker
-				))
-
-				?>
-		</ol>
+		<?php echo do_shortcode('[didaxo_sublevels_list]') ?>
 		<?php
 		return ob_get_clean();
 	}
