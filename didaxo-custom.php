@@ -85,11 +85,12 @@ class DidaxoCustom
 		// VIMEO API
 		wp_register_script('didaxo-level-vimeoapi', DIDAXO_URL . '/js/didaxo_level_vimeoAPI.js', array('jquery'), false, true );
 		wp_register_script('froogaloop', 'http://a.vimeocdn.com/js/froogaloop2.min.js');
-		// MEDIA ELEMENTS
 		
-		wp_register_script('mediaelement', DIDAXO_URL . '/mediaelement/mediaelement-and-player.min.js');
-		wp_register_script('didaxo-level-mediaelement', DIDAXO_URL . '/js/didaxo_level_mediaElements.js', array('jquery', 'mediaelement'), false, true );
-		wp_register_style('mediaelement-style', DIDAXO_URL . '/mediaelement/mediaelementplayer.min.css');
+		// MEDIA ELEMENTS
+		wp_register_script('mediaelement', DIDAXO_URL . '/mediaelement/mediaelement-and-player.min.js', array(), false, true);
+		wp_register_script('mep-sourcechooser', DIDAXO_URL . '/js/mep-sourcechooser.js', array('mediaelement'), false, true);
+		wp_register_script('didaxo-level-mediaelement', DIDAXO_URL . '/js/didaxo_level_mediaElements.js', array('jquery', 'mep-sourcechooser'), false, true );
+		wp_register_style('mediaelement-style', DIDAXO_URL . '/mediaelement/mediaelementplayer.css');
 		wp_register_style('iosfix-style', DIDAXO_URL . '/css/iOSFIx.min.css');
 	}
 

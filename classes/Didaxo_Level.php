@@ -165,8 +165,13 @@ class DidaxoLevel
 	 * @param  [type] $atts [description]
 	 * @return [type]       [description]
 	 */
-	public static function buildRealPlayer( $video_to_show )
+	public static function buildRealPlayer( $video_to_show = null )
 	{
+
+		if( $video_to_show === null )
+		{
+			$video_to_show = self::$_video_sd_url;
+		}
 
 		$can_use = true;
 		$level_id = self::$_masterId;
@@ -197,8 +202,15 @@ class DidaxoLevel
 		<div id="didaxo-player-wrapper">
 			<video width="600" height="337" controls="controls" preload="none"  >
 				<!-- MP4 for Safari, IE9, iPhone, iPad, Android, and Windows Phone 7 -->
-				<source type="video/mp4" src="<?php echo $video_to_show; ?>" />
+				<!-- <source type="video/mp4" src="<?php echo $video_to_show; ?>"/> -->
 				<!-- <source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" /> -->
+				
+				<!-- <source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare.mp4" title="sd" /> -->
+				<!-- <source type="video/mp4" src="<?php echo MEDIAELEMENT_URL ?>/media/echo-hereweare-2.mp4" title="hd" /> -->
+
+				<source type="video/mp4" src="<?php echo self::$_video_sd_url; ?>" title="sd" />
+				<source type="video/mp4" src="<?php echo self::$_video_hd_url; ?>" title="hd" />
+
 				<object width="600" height="337" type="application/x-shockwave-flash" data="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf">
 					<param name="movie" value="<?php echo MEDIAELEMENT_URL ?>/flashmediaelement.swf" />
 					<param name="flashvars" value="controls=true&amp;file=<?php echo urlencode($video_to_show); ?>" />
@@ -206,6 +218,10 @@ class DidaxoLevel
 					<img src="<?php echo MEDIAELEMENT_URL ?>/background.png" width="600" height="337" alt="No video playback" title="No video playback capabilities, sorry!" />
 				</object>		
 			</video>
+			<!-- <form action="" method="GET" id="quality-controls">
+				<input type="submit" name="quality" value="sd" />
+				<input type="submit" name="quality" value="hd" />
+			</form> -->
 		</div>
 		<?php
 		return ob_get_clean();
@@ -227,17 +243,22 @@ class DidaxoLevel
 		wp_enqueue_script( 'mediaelement' );
 		wp_enqueue_script( 'didaxo-level-mediaelement' );
 
-		if( isset($_COOKIE['didaxo_video_quality']) ) :
-			self::$video_quality = $_COOKIE['didaxo_video_quality'];
+		return self::buildRealPlayer( );
 
-			if( self::$video_quality === 'hd' )
-			{
-				return self::buildRealPlayer( self::$_video_hd_url );
-			}
-			else 
-			{
-				return self::buildRealPlayer( self::$_video_sd_url );	
-			}
+		if( isset($_COOKIE['didaxo_video_quality']) ) :
+
+			return self::buildRealPlayer( );
+
+			// self::$video_quality = $_COOKIE['didaxo_video_quality'];
+
+			// if( self::$video_quality === 'hd' )
+			// {
+			// 	return self::buildRealPlayer( self::$_video_hd_url );
+			// }
+			// else 
+			// {
+			// 	return self::buildRealPlayer( self::$_video_sd_url );	
+			// }
 		else :
 			ob_start(); 
 		?>
@@ -245,7 +266,7 @@ class DidaxoLevel
 			<form action="#" id="quality-selection">
 				<p>Scegli la qualità del video</p>
 				<ul>
-					<input type="hidden" name="quality" value="">
+					<input type="hidden" name="quality" value="sd">
 					<li><input type="submit" name="sd" data-quality="sd" data-video="<?php echo self::$_video_sd_url ?>" value="Standard Definition"></li>
 					<li><input type="submit" name="hd" data-quality="hd" data-video="<?php echo self::$_video_sd_url ?>" value="High Definition"></li>
 				</ul>

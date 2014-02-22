@@ -158,7 +158,7 @@ jQuery(function($) {
 				
 				this.player = new MediaElementPlayer( base.$video, {
 					plugins: ['flash', 'silverlight'],
-					features: ['playpause','current','duration','volume','fullscreen'],
+					features: ['playpause','current','duration','volume','fullscreen','sourcechooser'],
 					enableKeyboard: false,
 					success: function( mediaElement, node, player ) {
 						// Flash / silverlight Plugin Bug FIx
