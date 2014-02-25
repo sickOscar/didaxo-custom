@@ -102,10 +102,12 @@ class DidaxoCustom
 			<ul>
 			<?php foreach($levels as $level) :  //print_r($level);
 				$title = get_post_meta( $level->ID, 'wpcf-didaxo_titolo_lezione', true);
+				if(!$level->post_parent) :
 			?>
 				<li>
 					<a href="<?php get_permalink( $level->ID ); ?>"><?php echo $title; ?></a>
 				</li>
+			<?php endif; ?>
 			<?php endforeach; ?>
 			</ul>
 		<?php
