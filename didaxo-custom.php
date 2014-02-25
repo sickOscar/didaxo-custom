@@ -85,7 +85,9 @@ class DidaxoCustom
 	 */
 	public function get_available_lessons( $atts )
 	{
-		$tu_group  = get_user_meta( tu()->user->ID, 'tu_group', true );
+		$tu_group  = get_user_meta( tu()->user->ID, 'tu_group');
+
+		var_dump(tu()->user);
 
 		// var_dump($tu_group);
 
