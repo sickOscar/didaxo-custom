@@ -87,10 +87,6 @@ class DidaxoCustom
 	{
 		$tu_group  = get_user_meta( tu()->user->ID, 'tu_group');
 
-		var_dump(tu()->user);
-
-		// var_dump($tu_group);
-
 		$levels = get_posts(array(
 			'post_type' => 'tu_level',
 			'meta_key' => 'wpcf-tu_group',
