@@ -11,14 +11,6 @@
 			var t = this;
 
 			player.sourcechooserButton =
-				// $('<div class="mejs-button mejs-sourcechooser-button">'+
-				// 	'<button type="button" aria-controls="' + t.id + '" title="' + t.options.sourcechooserText + '"></button>'+
-				// 	'<div class="mejs-sourcechooser-selector">'+
-				// 		'<ul>'+
-				// 		'</ul>'+
-				// 	'</div>'+
-				// '</div>')
-				// 	.appendTo(controls)
 				$(
 					'<div class="mejs-button mejs-sourcechooser-button">'+
 						'<a title="quality">HD</a>'+
@@ -45,29 +37,12 @@
 							$('a[title=quality]').addClass('active');
 						}
 						if( media.currentSrc === t.hdSource ) {
-							media.setSrc(t.standardSource);	
+							media.setSrc(t.standardSource);
 							$('a[title=quality]').removeClass('active');
 						}
 
 						t.setCurrentTime( currentTime );
 
-						// media.play();
-
-						// ev.preventDefault();
-						// src = this.value;
-
-						// console.log('quality choose');
-
-						// media.pause();
-
-						// if (media.currentSrc != src) {
-						// 	currentTime = media.currentTime;
-						// 	paused = media.paused;
-						// 	media.setSrc(src);
-						// 	if (!paused) {
-						// 		//media.play();
-						// 	}
-						// }
 						return false;
 					});
 

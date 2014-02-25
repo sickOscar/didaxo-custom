@@ -46,6 +46,8 @@ class DidaxoCustom
 
 		add_action( 'init', array( $this, 'register_scripts') );
 		add_action( 'wp', array(  $this , 'factory') );
+
+		add_shortcode('didaxo_available_lessons', array( &$this, 'get_available_lessons' ) );
 	}
 
 	/**
@@ -77,6 +79,37 @@ class DidaxoCustom
 	}
 
 	/**
+	 * [get_available_lessons description]
+	 * @param  [type] $atts [description]
+	 * @return [type]       [description]
+	 */
+	public function get_available_lessons( $atts )
+	{
+		$tu_group  = get_user_meta( tu()->user->ID, 'tu_group', true );
+
+		// var_dump($tu_group);
+
+		$levels = get_posts(array(
+			'post_type' => 'tu_level',
+			'meta_key' => 'wpcf-tu_group',
+			'meta_value' => $tu_group
+		));
+
+		ob_start(); ?>
+			<ul>
+			<?php foreach($levels as $level) :  
+				$title = get_post_meta( $level->ID, 'wpcf-didaxo_titolo_lezione', true);
+			?>
+				<li>
+					<a href="<?php get_permalink( $level->ID ); ?>"><?php echo $title; ?></a>
+				</li>
+			<?php endforeach; ?>
+			</ul>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
 	 * [register_scripts description]
 	 * @return [type] [description]
 	 */
@@ -102,6 +135,8 @@ if ( is_plugin_active('train-up/index.php') ) {
 		new DidaxoCustom;
 	} );
 
+	
+
 	// AJAX
 	// choose definition
 	add_action( 'wp_ajax_chooseDefinition', array( 'TU\DidaxoLevel', '_ajax_chooseDefinition') );
@@ -114,6 +149,7 @@ if ( is_plugin_active('train-up/index.php') ) {
 	add_action( 'wp_ajax_nopriv_checkAnswer', array( 'TU\DidaxoLevel', '_ajax_checkAnswer') );
 
 }
+
 
 
 
