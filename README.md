@@ -57,17 +57,3 @@ Per segnare a wordpress che uno specifico utente ha passato un livello, ho prefe
 ´´´html
 tu_user_passed_test_{test->ID}
 ´´
-
-#### Shortcode
-
-E' disponibile uno shortcode per fare comparire il player nel livello padre, a seconda del tipo di player che si vuole testare
-
-´´´html
-[didaxo_vimeo_player]
-´´´
-
-#### Librerie JS
-
-L'attuale implementazione è con librerie Vimeo. 
-
-* Impostare l'id di un video pubblico per il test provvisorio con Vimeo, fino alla risoluzione (se necessaria) di un bug che ne impedisce il playe via API una volta inserita la password
