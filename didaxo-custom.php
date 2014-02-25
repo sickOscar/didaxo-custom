@@ -87,15 +87,20 @@ class DidaxoCustom
 	{
 		$tu_group  = get_user_meta( tu()->user->ID, 'tu_group');
 
+		 // var_dump(tu()->user);
+
+		// var_dump($tu_group);
+		$tu_group = implode(',',$tu_group);
 		$levels = get_posts(array(
 			'post_type' => 'tu_level',
-			'meta_key' => 'wpcf-tu_group',
+			'meta_key' => 'tu_group',
 			'meta_value' => $tu_group
 		));
 
 		ob_start(); ?>
+			<?php //print_r($levels); ?>
 			<ul>
-			<?php foreach($levels as $level) :  
+			<?php foreach($levels as $level) :  //print_r($level);
 				$title = get_post_meta( $level->ID, 'wpcf-didaxo_titolo_lezione', true);
 			?>
 				<li>
