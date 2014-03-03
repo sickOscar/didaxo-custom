@@ -163,10 +163,11 @@ jQuery(function($) {
 			base.buildPlayer = function() {
 
 				var fullscreen = canPlay ? 'fullscreen' : '';
+				var sourcechooser = canPlay ? 'sourcechooser' : '';
 				
 				this.player = new MediaElementPlayer( base.$video, {
 					plugins: ['flash', 'silverlight'],
-					features: ['playpause','current','duration','volume', fullscreen, 'sourcechooser'],
+					features: ['playpause','current','duration','volume', fullscreen, sourcechooser],
 					enableKeyboard: false,
 					success: function( mediaElement, node, player ) {
 						// Flash / silverlight Plugin Bug FIx
