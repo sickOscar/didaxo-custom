@@ -17,12 +17,12 @@
 					'</div>'
 				).appendTo(controls)
 
-					// hover
-					.hover(function() {
-						$(this).find('.mejs-sourcechooser-selector').css('visibility','visible');
-					}, function() {
-						$(this).find('.mejs-sourcechooser-selector').css('visibility','hidden');
-					})
+					// // hover
+					// .hover(function() {
+					// 	$(this).find('.mejs-sourcechooser-selector').css('visibility','visible');
+					// }, function() {
+					// 	$(this).find('.mejs-sourcechooser-selector').css('visibility','hidden');
+					// })
 
 					// handle clicks to the language radio buttons
 					.delegate('a', 'click', function(ev) {
@@ -41,7 +41,18 @@
 							$('a[title=quality]').removeClass('active');
 						}
 
-						t.setCurrentTime( currentTime );
+						player.load();
+
+
+						player.play();
+
+						// media.play();
+
+						media.addEventListener( 'canplay', function() {
+							player.setCurrentTime( currentTime );
+						});
+
+						// t.setCurrentTime( currentTime );
 
 						return false;
 					});
