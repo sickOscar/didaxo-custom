@@ -100,6 +100,7 @@ class DidaxoCustom
 
 		$levels = get_posts(array(
 			'post_type' => 'tu_level',
+			'nopaging' => true,
 			'meta_query' => array(
 				array(
 					'key' => 'tu_group',
