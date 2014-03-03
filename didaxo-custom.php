@@ -95,10 +95,12 @@ class DidaxoCustom
 			$groups[] = $meta_value->meta_value;
 		}
 
+	//var_dump($groups);
+
 		// $tu_group = implode(',', $groups);
-		
 
 		$levels = get_posts(array(
+//'post_status' => 'any',
 			'post_type' => 'tu_level',
 			'nopaging' => true,
 			'meta_query' => array(
@@ -112,17 +114,37 @@ class DidaxoCustom
 
 		ob_start(); ?>
 			<?php //print_r($levels); ?>
-			<ul>
-			<?php foreach($levels as $level) :  //print_r($level);
-				$title = get_post_meta( $level->ID, 'wpcf-didaxo_titolo_lezione', true);
-				if(!$level->post_parent) :
-			?>
-				<li>
-					<a href="<?php echo get_permalink( $level->ID ); ?>"><?php echo $title; ?></a>
-				</li>
-			<?php endif; ?>
-			<?php endforeach; ?>
-			</ul>
+			<table class="shop_table lesson_list">
+				<thead>
+					<tr>
+						<th class="lesson_title"><span class="nobr">Titolo</span></th>
+						<th class="lesson_prof"><span class="nobr">Docenti</span></th>
+						<th class="lesson_credits"><span class="nobr">Crediti</span></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach($levels as $level) :  //print_r($level);
+									$title = get_post_meta( $level->ID, 'wpcf-didaxo_titolo_lezione', true);
+									$product = get_post_meta( $level->ID, 'wpcf-didaxo_id_prodotto', true);
+									$docenti = do_shortcode( '[wpv-view name="list_docenti" childof="'.$product.'"]' );
+									$crediti = do_shortcode( '[types id="'.$product.'" field="didaxo_crediti" format="FIELD_VALUE"][/types]' );
+									if(!$level->post_parent) :
+								?>			
+						<tr class="lesson">
+							<td class="lesson_link">
+								<a href="<?php echo get_permalink( $level->ID ); ?>"><?php echo $title; ?></a>
+							</td>
+							<td class="lesson_prof_list">
+								<?php echo $docenti; ?>
+							</td>
+							<td class="lesson_cred">
+								<?php echo $crediti; ?>
+							</td>
+						</tr>
+					<?php endif; ?>
+					<?php endforeach; ?>			
+				</tbody>
+			</table>
 		<?php
 		return ob_get_clean();
 	}
@@ -167,8 +189,3 @@ if ( is_plugin_active('train-up/index.php') ) {
 	add_action( 'wp_ajax_nopriv_checkAnswer', array( 'TU\DidaxoLevel', '_ajax_checkAnswer') );
 
 }
-
-
-
-
-
