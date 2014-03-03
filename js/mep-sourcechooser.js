@@ -42,17 +42,11 @@
 						}
 
 						player.load();
-
-
 						player.play();
-
-						// media.play();
 
 						media.addEventListener( 'canplay', function() {
 							player.setCurrentTime( currentTime );
 						});
-
-						// t.setCurrentTime( currentTime );
 
 						return false;
 					});

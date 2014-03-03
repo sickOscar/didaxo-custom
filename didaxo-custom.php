@@ -85,16 +85,27 @@ class DidaxoCustom
 	 */
 	public function get_available_lessons( $atts )
 	{
-		$tu_group  = get_user_meta( tu()->user->ID, 'tu_group');
+		global $wpdb;
+		$qry = $wpdb->prepare( "SELECT meta_value from " . $wpdb->usermeta . " WHERE meta_key = 'tu_group' AND user_id = %d", tu()->user->ID );
 
-		 // var_dump(tu()->user);
+		$query_results = $wpdb->get_results( $qry );
+		$groups = array();
+		foreach( $query_results as $meta_value ) 
+		{
+			$groups[] = $meta_value->meta_value;
+		}
 
-		// var_dump($tu_group);
-		$tu_group = implode(',',$tu_group);
+		// $tu_group = implode(',', $groups);
+
 		$levels = get_posts(array(
 			'post_type' => 'tu_level',
-			'meta_key' => 'tu_group',
-			'meta_value' => $tu_group
+			'meta_query' => array(
+				array(
+					'key' => 'tu_group',
+					'value' => $groups,
+					'compare' => 'IN',
+				)
+			)
 		));
 
 		ob_start(); ?>
