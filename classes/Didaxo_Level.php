@@ -488,7 +488,7 @@ class DidaxoLevel
 			<?php 
 			$index++;
 			endforeach; ?>
-			<div class="submit">
+			<div class="submit_container">
 				<input type="submit" value="Conferma Risposta">
 			</div>
 		</form>
