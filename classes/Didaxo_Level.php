@@ -534,7 +534,8 @@ class DidaxoLevel
 	 */
 	public static function render_out_of_time_form( $test )
 	{
-		$time_limit = self::convert_time_to_seconds( $test->get_time_limit() );
+		// $time_limit = self::convert_time_to_seconds( $test->get_time_limit() );
+		$time_limit = 90;
 		ob_start(); ?>
 		<form action="#" name="loose-form" class="result-form">
 			<span class="loose-message message">Non hai dato la risposta nel limite dei <?php echo $time_limit ?> secondi! Riguarda il video e prova ancora!</span><br>
@@ -633,7 +634,11 @@ class DidaxoLevel
 	{
 		$test = $question->get_test();
 
-		$time_limit = self::convert_time_to_seconds( $test->get_time_limit() );
+		// $time_limit = self::convert_time_to_seconds( $test->get_time_limit() );
+		// set a mano del tempo di risposta a 90 secondi
+		$time_limit = 90;
+
+
 		// controllo tempistiche 
 		// deve averci messo meno del tempo limite del test
 		// per farlo devo comunque ottenere l'archive appena inserito,

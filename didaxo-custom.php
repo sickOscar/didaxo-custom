@@ -96,6 +96,7 @@ class DidaxoCustom
 		}
 
 		// $tu_group = implode(',', $groups);
+		
 
 		$levels = get_posts(array(
 			'post_type' => 'tu_level',
