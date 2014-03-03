@@ -28,6 +28,12 @@ jQuery(function($) {
 
 			var isAndroid = ua.toLowerCase().indexOf("android") > -1;// && ua.indexOf("mobile");
 			var isiOS = ( ua.match(/(iPad|iPhone|iPod)/g) ? true : false );
+			var canPlay = false;
+
+			var v = document.createElement('video');
+			if(v.canPlayType && v.canPlayType('video/mp4').replace(/no/, '')) {
+				canPlay = true;
+			}
 			
 			if (isAndroid) {
 				// Do something!
@@ -155,10 +161,12 @@ jQuery(function($) {
 			 * @return {[type]} [description]
 			 */
 			base.buildPlayer = function() {
+
+				var fullscreen = canPlay ? 'fullscreen' : '';
 				
 				this.player = new MediaElementPlayer( base.$video, {
 					plugins: ['flash', 'silverlight'],
-					features: ['playpause','current','duration','volume','fullscreen','sourcechooser'],
+					features: ['playpause','current','duration','volume', fullscreen, 'sourcechooser'],
 					enableKeyboard: false,
 					success: function( mediaElement, node, player ) {
 						// Flash / silverlight Plugin Bug FIx

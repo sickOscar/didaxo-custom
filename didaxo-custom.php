@@ -105,7 +105,7 @@ class DidaxoCustom
 				if(!$level->post_parent) :
 			?>
 				<li>
-					<a href="<?php get_permalink( $level->ID ); ?>"><?php echo $title; ?></a>
+					<a href="<?php echo get_permalink( $level->ID ); ?>"><?php echo $title; ?></a>
 				</li>
 			<?php endif; ?>
 			<?php endforeach; ?>
